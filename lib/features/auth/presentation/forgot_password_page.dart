@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
 
@@ -41,67 +40,111 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
-      body: Center(
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Forgot Password?',
-                style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 40),
+              // Big Bold Header
               const Text(
-                'Enter your email address and we will send you a password reset link.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                'Forgot\npassword?',
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  height: 1.1,
                 ),
-                keyboardType: TextInputType.emailAddress,
-                enabled: !isLoading,
               ),
-              const SizedBox(height: 24),
-              if (isLoading)
-                const Center(child: CircularProgressIndicator())
-              else ...[
-                ElevatedButton(
-                  onPressed: () async {
-                    final email = _emailController.text.trim();
-                    if (email.isNotEmpty) {
-                      // Pass redirect deep link matching your URL scheme
-                      await ref.read(authControllerProvider.notifier).resetPassword(
-                        email,
-                        redirectTo: 'io.supabase.flutter://reset-callback',
-                      );
-                      if (context.mounted) {
-                        _showMessage('Password reset instructions have been sent to your email.');
-                      
-                      }
-                    } else {
-                      _showMessage('Please enter your email', isError: true);
-                    }
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Text('Send Reset Link', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 40),
+              // Styled Text Field
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F3F3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: TextField(
+                  controller: _emailController,
+                  enabled: !isLoading,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter your email address',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      color: Colors.black54,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 20),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Back to Login'),
+              ),
+              const SizedBox(height: 20),
+              // Subtext with Asterisk
+              RichText(
+                text: const TextSpan(
+                  text: '* ',
+                  style: TextStyle(color: Colors.red, fontSize: 14),
+                  children: [
+                    TextSpan(
+                      text:
+                          'We will send you a message to set or reset your new password',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              const SizedBox(height: 40),
+              // Pinkish-Red Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final email = _emailController.text.trim();
+                          if (email.isNotEmpty) {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .resetPassword(
+                                  email,
+                                  redirectTo:
+                                      'io.supabase.flutter://reset-callback',
+                                );
+                            if (context.mounted) {
+                              _showMessage('Reset instructions sent!');
+                            }
+                          } else {
+                            _showMessage(
+                              'Please enter your email',
+                              isError: true,
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(
+                      0xFFFF3B5C,
+                    ), // The signature red/pink
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
             ],
           ),
         ),

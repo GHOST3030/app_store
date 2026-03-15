@@ -1,33 +1,18 @@
-import 'datasources/product_remote_datasource.dart';
 import 'product_model.dart';
+import 'product_query.dart';
 
-/// The single repository used by the logic layer.
-///
-/// Depends ONLY on [ProductRemoteDataSource] — never on a concrete backend.
-/// Swap the backend by injecting a different datasource via Riverpod.
-///
-/// Methods may throw exceptions with messages from the backend (e.g. Supabase).
-class ProductRepository {
-  final ProductRemoteDataSource _dataSource;
-
-  const ProductRepository({required ProductRemoteDataSource dataSource})
-      : _dataSource = dataSource;
-
-  /// Returns all products sorted by creation date (newest first).
-  Future<List<ProductModel>> getProducts() => _dataSource.getProducts();
-
-  /// Returns a single product by [id].
-  Future<ProductModel> getProductById(String id) =>
-      _dataSource.getProductById(id);
-
-  /// Creates a new product.
-  Future<void> createProduct(ProductModel product) =>
-      _dataSource.createProduct(product);
-
-  /// Updates an existing product.
-  Future<void> updateProduct(ProductModel product) =>
-      _dataSource.updateProduct(product);
-
-  /// Deletes the product with the given [id].
-  Future<void> deleteProduct(String id) => _dataSource.deleteProduct(id);
+/// The single contract that the logic and UI layers depend on.
+/// Swap implementations (DummyJSON ↔ Supabase) without touching
+/// anything outside the data layer.
+abstract class ProductRepository {
+  /// Fetches a page of products.
+  ///
+  /// [cursor] — number of already-loaded products (skip offset).
+  /// [limit]  — how many products to fetch in this page.
+  /// [query]  — optional search / filter / sort options.
+  Future<List<ProductModel>> getProducts({
+    ProductQuery? query,
+    int cursor = 0,
+    int limit = 20,
+  });
 }

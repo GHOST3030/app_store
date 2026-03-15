@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:new_auth/features/product/presentation/pages/product_detail_page.dart';
+import 'package:new_auth/features/product/presentation/pages/product_list_page.dart';
 import '../../features/auth/logic/providers_auth.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/signup_page.dart';
@@ -34,22 +35,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Home'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () =>
-                    ref.read(authControllerProvider.notifier).logout(),
-              ),
-            ],
-          ),
-          body: const Center(child: Text('Welcome! You are authenticated.')),
-        ),
-      ),
+      GoRoute(path: '/home', builder: (context, state) =>ProductListPage()),
+          GoRoute(
+      path: '/product/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return ProductDetailPage(productId: id);
+      },
+    ),
+
     ],
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
