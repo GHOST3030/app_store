@@ -1,9 +1,7 @@
-enum ProductSortField { price, rating, newest }
+enum ProductSortField { price, rating, createdAt }
 
 enum SortOrder { asc, desc }
 
-/// Encapsulates all filtering, searching, and sorting options.
-/// Passed to [ProductRepository.getProducts] by the logic layer.
 class ProductQuery {
   final String? search;
   final double? minPrice;
@@ -24,19 +22,8 @@ class ProductQuery {
     this.categoryId,
     this.onlyFeatured,
     this.sortBy,
-    this.sortOrder = SortOrder.asc,
+    this.sortOrder = SortOrder.desc,
   });
-
-  const ProductQuery.empty()
-      : search = null,
-        minPrice = null,
-        maxPrice = null,
-        minRating = null,
-        onlyAvailable = null,
-        categoryId = null,
-        onlyFeatured = null,
-        sortBy = null,
-        sortOrder = SortOrder.asc;
 
   bool get hasActiveFilters =>
       search != null ||
@@ -58,7 +45,6 @@ class ProductQuery {
     bool? onlyFeatured,
     ProductSortField? sortBy,
     SortOrder? sortOrder,
-    // Clear flags for nullable fields
     bool clearSearch = false,
     bool clearMinPrice = false,
     bool clearMaxPrice = false,

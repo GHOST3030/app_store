@@ -18,9 +18,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => ref.read(productNotifierProvider.notifier).loadProducts(),
-    );
     _scroll.addListener(_onScroll);
   }
 
@@ -80,45 +77,44 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 SizedBox(height: r.sectionGap),
 
-                // Promo carousel
+                // // Promo carousel
                 const PromoBanner(),
 
                 SizedBox(height: r.sectionGap),
 
-                // Deal of the Day
+                // // Deal of the Day
                 const DealOfTheDaySection(),
 
                 SizedBox(height: r.sectionGap),
 
                 // Special offers banner
-                const SpecialOffersBanner(),
+                // const SpecialOffersBanner(),
+                // SizedBox(height: r.isPhone ? 14 : 18),
 
-                SizedBox(height: r.isPhone ? 14 : 18),
+                // // Flat & Heels banner
+                // const FlatAndHeelsBanner(),
 
-                // Flat & Heels banner
-                const FlatAndHeelsBanner(),
+                // SizedBox(height: r.sectionGap),
 
-                SizedBox(height: r.sectionGap),
+                // // Trending products grid
+                // const TrendingProductsSection(),
 
-                // Trending products grid
-                const TrendingProductsSection(),
+                // SizedBox(height: r.sectionGap),
 
-                SizedBox(height: r.sectionGap),
+                // // Hot Summer Sale
+                // const HotSummerSaleBanner(),
 
-                // Hot Summer Sale
-                const HotSummerSaleBanner(),
+                // SizedBox(height: r.sectionGap),
 
-                SizedBox(height: r.sectionGap),
+                // // New Arrivals (featured products)
+                // const NewArrivalsSection(),
 
-                // New Arrivals (featured products)
-                const NewArrivalsSection(),
+                // SizedBox(height: r.sectionGap),
 
-                SizedBox(height: r.sectionGap),
+                // // Sponsored
+                // const SponsoredBanner(),
 
-                // Sponsored
-                const SponsoredBanner(),
-
-                SizedBox(height: r.sectionGap + 8),
+                // SizedBox(height: r.sectionGap + 8),
               ],
             ),
           ),

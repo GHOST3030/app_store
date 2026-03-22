@@ -4,94 +4,91 @@ import 'product_model.dart';
 import 'product_query.dart';
 import 'product_repository.dart';
 
-/// Supabase implementation of [ProductRepository].
-///
-/// Assumes a `products` table with the following columns:
-///   id, title, description, price, discount_price,
-///   images (text[]), category_id, stock, rating, created_at
-///
-/// To switch from DummyJSON to Supabase, change the provider in
-/// product_providers.dart to return SupabaseProductRepository().
-/// Nothing else changes.
 class SupabaseProductRepository implements ProductRepository {
   final SupabaseClient _client;
 
-  SupabaseProductRepository(this._client);
+  const SupabaseProductRepository(this._client);
+
+  // ─── Public API ──────────────────────────────────────────────────────────────
 
   @override
   Future<List<ProductModel>> getProducts({
-    ProductQuery? query,
-    int cursor = 0,
     int limit = 20,
+    String? cursor,
+    ProductQuery? query,
   }) async {
-    var builder = _client
-        .from('products')
-        .select()
-        .range(cursor, cursor + limit - 1);
+    // 1. Start builder
+    var builder = _client.from('products').select();
 
-    builder = _applyFilters(builder, query);
-    builder = _applySort(builder, query);
+    // 2. Apply filters (does NOT reassign builder — just chains)
+    if (query != null) {
+      if (query.search != null && query.search!.isNotEmpty) {
+        builder = builder.ilike('title', '%${query.search}%');
+      }
+      if (query.minPrice != null) {
+        builder = builder.gte('price', query.minPrice!);
+      }
+      if (query.maxPrice != null) {
+        builder = builder.lte('price', query.maxPrice!);
+      }
+      if (query.minRating != null) {
+        builder = builder.gte('rating', query.minRating!);
+      }
+      if (query.onlyAvailable == true) {
+        builder = builder.gt('stock', 0);
+      }
+      if (query.categoryId != null && query.categoryId!.isNotEmpty) {
+        builder = builder.eq('category_id', query.categoryId!);
+      }
+      if (query.onlyFeatured == true) {
+        builder = builder.gte('rating', 4.5);
+      }
+    }
 
-    final response = await builder;
+    // 3. Apply cursor (true cursor-based pagination via createdAt)
+    if (cursor != null) {
+      builder = builder.lt('created_at', cursor);
+    }
+
+    // 4. Apply sort + limit
+    final sortColumn = _columnFor(query?.sortBy);
+    final ascending = query?.sortOrder == SortOrder.asc;
+
+    final response = await builder
+        .order(sortColumn, ascending: ascending)
+        .order('id', ascending: true) // tie-breaker for stable sort
+        .limit(limit);
 
     return (response as List)
         .map((row) => ProductModel.fromSupabase(row as Map<String, dynamic>))
         .toList();
   }
 
-  dynamic _applyFilters(dynamic builder, ProductQuery? query) {
-    if (query == null) return builder;
+  @override
+  Future<List<ProductModel>> getFeaturedProducts() async {
+    final response = await _client
+        .from('products')
+        .select()
+        .gte('rating', 4.5)
+        .order('created_at', ascending: false)
+        .limit(10);
 
-    if (query.search != null && query.search!.isNotEmpty) {
-      // Full-text search on title and description
-     builder= _client
-      .from('products')
-      .select('*');
-      builder = builder.ilike('title', '%${query.search}%');
-    }
-
-    if (query.minPrice != null) {
-      builder = builder.gte('price', query.minPrice);
-    }
-
-    if (query.maxPrice != null) {
-      builder = builder.lte('price', query.maxPrice);
-    }
-
-    if (query.minRating != null) {
-      builder = builder.gte('rating', query.minRating);
-    }
-
-    if (query.onlyAvailable == true) {
-      builder = builder.gt('stock', 0);
-    }
-
-    if (query.categoryId != null && query.categoryId!.isNotEmpty) {
-      builder = builder.eq('category_id', query.categoryId!);
-    }
-
-    if (query.onlyFeatured == true) {
-      // Featured = rating >= 4.5 (matches ProductModel.isFeatured)
-      builder = builder.gte('rating', 4.5);
-    }
-
-    return builder;
+    return (response as List)
+        .map((row) => ProductModel.fromSupabase(row as Map<String, dynamic>))
+        .toList();
   }
 
-  dynamic _applySort(dynamic builder, ProductQuery? query) {
-    if (query?.sortBy == null) {
-      return builder.order('created_at', ascending: false);
-    }
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-    final ascending = query!.sortOrder == SortOrder.asc;
-
-    switch (query.sortBy!) {
+  String _columnFor(ProductSortField? field) {
+    switch (field) {
       case ProductSortField.price:
-        return builder.order('price', ascending: ascending);
+        return 'price';
       case ProductSortField.rating:
-        return builder.order('rating', ascending: ascending);
-      case ProductSortField.newest:
-        return builder.order('created_at', ascending: false);
+        return 'rating';
+      case ProductSortField.createdAt:
+      case null:
+        return 'created_at';
     }
   }
 }

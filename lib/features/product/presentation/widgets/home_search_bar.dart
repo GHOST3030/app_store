@@ -20,8 +20,7 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
   }
 
   void _onSubmit(String value) {
-    final notifier = ref.read(productNotifierProvider.notifier);
-    value.trim().isEmpty ? notifier.clearSearch() : notifier.search(value.trim());
+    ref.read(productNotifierProvider.notifier).search(value);
   }
 
   @override
@@ -48,7 +47,7 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
                 GestureDetector(
                   onTap: () {
                     _controller.clear();
-                    ref.read(productNotifierProvider.notifier).clearSearch();
+                    ref.read(productNotifierProvider.notifier).search('');
                     setState(() {});
                   },
                   child: const Padding(

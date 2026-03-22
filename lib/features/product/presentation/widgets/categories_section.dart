@@ -30,7 +30,7 @@ class CategoriesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final r = HomeResponsive.of(context);
-    final selectedId = ref.watch(productNotifierProvider).query.categoryId;
+    final selectedId = ref.watch(productQueryProvider).categoryId;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +223,7 @@ class _SortSheet extends StatelessWidget {
     (label: 'Top Rated', field: ProductSortField.rating, order: SortOrder.desc),
     (
       label: 'Newest First',
-      field: ProductSortField.newest,
+      field: ProductSortField.createdAt,
       order: SortOrder.desc,
     ),
   ];

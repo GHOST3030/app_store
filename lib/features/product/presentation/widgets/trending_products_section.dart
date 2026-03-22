@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/product_model.dart';
 import '../../logic/product_providers.dart';
-import '../../logic/product_state.dart';
 import 'export_allthings.dart';
 import 'product_card.dart';
 
@@ -10,8 +10,11 @@ class TrendingProductsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final products = ref.watch(productListProvider);
+    final isLoading = ref.watch(productIsLoadingProvider);
+    final isLoadingMore = ref.watch(productIsLoadingMoreProvider);
+    final hasMore = ref.watch(productHasMoreProvider);
     final r = HomeResponsive.of(context);
-    final state = ref.watch(productNotifierProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +90,9 @@ class TrendingProductsSection extends ConsumerWidget {
         SizedBox(height: r.isPhone ? 14 : 18),
 
         // ── Adaptive grid ───────────────────────────────────────────────────
-        _buildGrid(context, ref, state, r),
+        _buildGrid(
+          context, ref, products, isLoading, isLoadingMore, hasMore, r,
+        ),
       ],
     );
   }
@@ -95,10 +100,13 @@ class TrendingProductsSection extends ConsumerWidget {
   Widget _buildGrid(
     BuildContext ctx,
     WidgetRef ref,
-    ProductState state,
+    List<ProductModel> products,
+    bool isLoading,
+    bool isLoadingMore,
+    bool hasMore,
     HomeResponsive r,
   ) {
-    if (state.isLoading) {
+    if (isLoading) {
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -119,7 +127,7 @@ class TrendingProductsSection extends ConsumerWidget {
       );
     }
 
-    if (state.products.isEmpty) {
+    if (products.isEmpty) {
       return SizedBox(
         height: 80,
         child: const Center(
@@ -143,15 +151,15 @@ class TrendingProductsSection extends ConsumerWidget {
             crossAxisSpacing: r.gridSpacing,
             mainAxisSpacing: r.gridSpacing,
           ),
-          itemCount: state.products.take(r.productGridCols * 2).length,
-          itemBuilder: (_, i) => ProductCard(product: state.products[i]),
+          itemCount: products.take(r.productGridCols * 2).length,
+          itemBuilder: (_, i) => ProductCard(product: products[i]),
         ),
 
-        if (state.hasMore) ...[
+        if (hasMore) ...[
           SizedBox(height: r.isPhone ? 16 : 20),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: r.hPad),
-            child: state.isLoadingMore
+            child: isLoadingMore
                 ? const Center(
                     child: CircularProgressIndicator(
                       color: HomeColors.primary,

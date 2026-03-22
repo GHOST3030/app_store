@@ -1,18 +1,17 @@
 import 'product_model.dart';
 import 'product_query.dart';
 
-/// The single contract that the logic and UI layers depend on.
-/// Swap implementations (DummyJSON ↔ Supabase) without touching
-/// anything outside the data layer.
-abstract class ProductRepository {
+abstract interface class ProductRepository {
   /// Fetches a page of products.
   ///
-  /// [cursor] — number of already-loaded products (skip offset).
-  /// [limit]  — how many products to fetch in this page.
-  /// [query]  — optional search / filter / sort options.
+  /// [cursor] is the ISO-8601 `createdAt` of the last item in the previous
+  /// page (true cursor-based pagination). Pass `null` for the first page.
   Future<List<ProductModel>> getProducts({
-    ProductQuery? query,
-    int cursor = 0,
     int limit = 20,
+    String? cursor,
+    ProductQuery? query,
   });
+
+  /// Fetches a fixed list of featured products (rating >= 4.5).
+  Future<List<ProductModel>> getFeaturedProducts();
 }
