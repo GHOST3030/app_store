@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:new_auth/features/product/data/product_model.dart';
-import 'export_allthings.dart';
 
-class ProductCard extends StatelessWidget {
-  const ProductCard({
+import 'home_colors.dart';
+
+class ProductDealCard extends StatelessWidget {
+  const ProductDealCard({
     super.key,
     required this.product,
-    this.width,
+    this.width = 160,
     this.onTap,
   });
 
   final ProductModel product;
-  final double? width;
+  final double width;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final r = HomeResponsive.of(context);
-    final w = width ?? r.cardWidth;
-    final hasDiscount =
-        product.discountPrice != null && product.discountPrice! < product.price;
-    final pct = hasDiscount
-        ? (((product.price - product.discountPrice!) / product.price) * 100).round()
+    final hasDiscount = product.discountPrice != null &&
+        product.discountPrice! < product.price;
+    final discountPct = hasDiscount
+        ? (((product.price - product.discountPrice!) / product.price) * 100)
+            .round()
         : 0;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: w,
+        width: width,
         decoration: BoxDecoration(
           color: HomeColors.white,
-          borderRadius: BorderRadius.circular(r.borderRadius),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: HomeColors.divider),
           boxShadow: [
             BoxShadow(
@@ -43,39 +43,39 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image ─────────────────────────────────────────────────
+            // ── Image ──────────────────────────────────────────
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(r.borderRadius),
-                  ),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                   child: product.images.isNotEmpty
                       ? Image.network(
                           product.images.first,
                           width: double.infinity,
-                          height: r.cardImageHeight,
+                          height: 120,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
-                              _Placeholder(height: r.cardImageHeight),
+                              _ImagePlaceholder(width: width),
                         )
-                      : _Placeholder(height: r.cardImageHeight),
+                      : _ImagePlaceholder(width: width),
                 ),
                 if (hasDiscount)
                   Positioned(
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
                         color: HomeColors.badge,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$pct% off',
+                        '$discountPct% off',
                         style: const TextStyle(
                           color: HomeColors.white,
-                          fontSize: 9,
+                          fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -91,7 +91,9 @@ class ProductCard extends StatelessWidget {
                       color: HomeColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4),
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 4)
                       ],
                     ),
                     child: const Icon(Icons.favorite_border_rounded,
@@ -101,9 +103,9 @@ class ProductCard extends StatelessWidget {
               ],
             ),
 
-            // ── Info ──────────────────────────────────────────────────
+            // ── Info ────────────────────────────────────────────
             Padding(
-              padding: EdgeInsets.all(r.isPhone ? 10 : 12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -111,14 +113,16 @@ class ProductCard extends StatelessWidget {
                     product.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: r.captionFontSize + 1,
+                    style: const TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: HomeColors.textDark,
                       height: 1.3,
                     ),
                   ),
-                  SizedBox(height: r.isPhone ? 5 : 7),
+                  const SizedBox(height: 6),
+
+                  // Rating row
                   Row(
                     children: [
                       const Icon(Icons.star_rounded,
@@ -126,35 +130,37 @@ class ProductCard extends StatelessWidget {
                       const SizedBox(width: 2),
                       Text(
                         product.rating.toStringAsFixed(1),
-                        style: TextStyle(
-                            fontSize: r.captionFontSize,
-                            color: HomeColors.textMid),
+                        style: const TextStyle(
+                            fontSize: 11, color: HomeColors.textMid),
                       ),
                       const Spacer(),
                       if (product.stock == 0)
-                        Text(
-                          'Out',
+                        const Text(
+                          'Out of Stock',
                           style: TextStyle(
-                              fontSize: r.captionFontSize - 1,
+                              fontSize: 9,
                               color: HomeColors.badge,
                               fontWeight: FontWeight.w600),
                         ),
                     ],
                   ),
-                  SizedBox(height: r.isPhone ? 5 : 7),
+
+                  const SizedBox(height: 6),
+
+                  // Price row
                   if (hasDiscount) ...[
                     Text(
                       '₹${product.price.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: r.captionFontSize,
+                      style: const TextStyle(
+                        fontSize: 11,
                         color: HomeColors.priceOld,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
                     Text(
                       '₹${product.discountPrice!.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: r.priceFontSize,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: HomeColors.primary,
                       ),
@@ -162,8 +168,8 @@ class ProductCard extends StatelessWidget {
                   ] else
                     Text(
                       '₹${product.price.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: r.priceFontSize,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: HomeColors.textDark,
                       ),
@@ -178,15 +184,15 @@ class ProductCard extends StatelessWidget {
   }
 }
 
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.height});
-  final double height;
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder({required this.width});
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: height,
+      width: width,
+      height: 120,
       color: HomeColors.bgGrey,
       child: const Icon(Icons.image_not_supported_outlined,
           color: HomeColors.priceOld, size: 32),

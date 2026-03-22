@@ -106,13 +106,13 @@ class SupabaseAuthService implements AuthRepository {
       return await action();
     } on AuthApiException catch (e) {
       // الرسالة الأصلية من Supabase
-      print("AuthApiException in SupabaseAuthService: ${e.message}");
+     // print("AuthApiException in SupabaseAuthService: ${e.message}");
       throw e.message;
     } on AuthException catch (e) {
-      print("Unexpected error in SupabaseAuthService: $e");
+    //  print("Unexpected error in SupabaseAuthService: $e");
       throw e.message; // إذا كانت AuthException مسبقاً
     } catch (e) {
-      print("Unexpected error in SupabaseAuthService: $e");
+     // print("Unexpected error in SupabaseAuthService: $e");
       // أي خطأ غير متوقع
       throw e.toString();
     }

@@ -44,6 +44,9 @@ class SupabaseProductRepository implements ProductRepository {
 
     if (query.search != null && query.search!.isNotEmpty) {
       // Full-text search on title and description
+     builder= _client
+      .from('products')
+      .select('*');
       builder = builder.ilike('title', '%${query.search}%');
     }
 

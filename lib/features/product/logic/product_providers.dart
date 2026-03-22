@@ -15,8 +15,8 @@ import 'product_state.dart';
 // Nothing in the logic or UI layers needs to change.
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  final supabaseClient = ref.watch(supabaseClientProvider); 
-  return SupabaseProductRepository(supabaseClient); // ← default to Supabase
+ 
+  return SupabaseProductRepository(ref.watch(supabaseClientProvider)); // ← default to Supabase
   // return DummyJsonProductRepository(); // ← uncomment to use DummyJSON
 });
 
