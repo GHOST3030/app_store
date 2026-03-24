@@ -54,7 +54,7 @@ class TrendingProductsSection extends ConsumerWidget {
                       Text(
                         'Last Date 29/02/22',
                         style: TextStyle(
-                          color: HomeColors.white.withOpacity(0.85),
+                          color: HomeColors.white.withValues(alpha: 0.85),
                           fontSize: r.captionFontSize,
                         ),
                       ),
@@ -89,48 +89,43 @@ class TrendingProductsSection extends ConsumerWidget {
 
         SizedBox(height: r.isPhone ? 14 : 18),
 
-        // ── Adaptive grid ───────────────────────────────────────────────────
-        _buildGrid(
-          context, ref, products, isLoading, isLoadingMore, hasMore, r,
-        ),
+        // ── Grid content ────────────────────────────────────────────────────
+        Buildcontent(ctx: context, ref: ref, products: products, isLoading: isLoading, isLoadingMore: isLoadingMore, hasMore: hasMore, r: r),
       ],
     );
   }
+}
 
-  Widget _buildGrid(
-    BuildContext ctx,
-    WidgetRef ref,
-    List<ProductModel> products,
-    bool isLoading,
-    bool isLoadingMore,
-    bool hasMore,
-    HomeResponsive r,
-  ) {
+class Buildcontent extends StatelessWidget {
+  const Buildcontent({
+    super.key,
+    required this.ctx,
+    required this.ref,
+    required this.products,
+    required this.isLoading,
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.r,
+  });
+
+  final BuildContext ctx;
+  final WidgetRef ref;
+  final List<ProductModel> products;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final HomeResponsive r;
+
+  @override
+  Widget build(BuildContext context) {
     if (isLoading) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: r.hPad),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: r.productGridCols,
-          childAspectRatio: r.gridCardAspectRatio,
-          crossAxisSpacing: r.gridSpacing,
-          mainAxisSpacing: r.gridSpacing,
-        ),
-        itemCount: r.productGridCols * 2,
-        itemBuilder: (_, __) => Container(
-          decoration: BoxDecoration(
-            color: HomeColors.bgGrey,
-            borderRadius: BorderRadius.circular(r.borderRadius),
-          ),
-        ),
-      );
+      return BuildShimmerGrid(r: r);
     }
 
     if (products.isEmpty) {
-      return SizedBox(
+      return const SizedBox(
         height: 80,
-        child: const Center(
+        child: Center(
           child: Text(
             'No products',
             style: TextStyle(color: HomeColors.textMid),
@@ -139,20 +134,28 @@ class TrendingProductsSection extends ConsumerWidget {
       );
     }
 
+    final displayedProducts = products.take(r.productGridCols * 2).toList();
+    final cardWidth =
+        (MediaQuery.sizeOf(ctx).width - r.hPad * 2 - r.gridSpacing * (r.productGridCols - 1)) /
+            r.productGridCols;
+    final cardHeight = cardWidth / r.gridCardAspectRatio;
+
     return Column(
       children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: r.hPad),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: r.productGridCols,
-            childAspectRatio: r.gridCardAspectRatio,
-            crossAxisSpacing: r.gridSpacing,
-            mainAxisSpacing: r.gridSpacing,
+          child: Wrap(
+            spacing: r.gridSpacing,
+            runSpacing: r.gridSpacing,
+            children: [
+              for (final product in displayedProducts)
+                SizedBox(
+                  width: cardWidth,
+                  height: cardHeight,
+                  child: ProductCard(product: product),
+                ),
+            ],
           ),
-          itemCount: products.take(r.productGridCols * 2).length,
-          itemBuilder: (_, i) => ProductCard(product: products[i]),
         ),
 
         if (hasMore) ...[
@@ -190,6 +193,37 @@ class TrendingProductsSection extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class BuildShimmerGrid extends StatelessWidget {
+  const BuildShimmerGrid({
+    super.key,
+    required this.r,
+  });
+
+  final HomeResponsive r;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: r.hPad),
+      child: Wrap(
+        spacing: r.gridSpacing,
+        runSpacing: r.gridSpacing,
+        children: List.generate(
+          r.productGridCols * 2,
+          (_) => Container(
+            width: 100, // placeholder — gets sized by parent constraints
+            height: 120,
+            decoration: BoxDecoration(
+              color: HomeColors.bgGrey,
+              borderRadius: BorderRadius.circular(r.borderRadius),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

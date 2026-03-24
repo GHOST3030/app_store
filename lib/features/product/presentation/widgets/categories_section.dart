@@ -130,15 +130,15 @@ class _Bubble extends StatelessWidget {
           height: r.categoryBubbleSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: selected ? cat.color : cat.color.withOpacity(0.10),
+            color: selected ? cat.color : cat.color.withValues(alpha: 0.10),
             border: Border.all(
-              color: selected ? cat.color : cat.color.withOpacity(0.25),
+              color: selected ? cat.color : cat.color.withValues(alpha:0.25),
               width: selected ? 2.5 : 1.5,
             ),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: cat.color.withOpacity(0.35),
+                      color: cat.color.withValues(alpha:0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -218,7 +218,7 @@ class _SortSheet extends StatelessWidget {
     (
       label: 'Price: High → Low',
       field: ProductSortField.price,
-      order: SortOrder.desc,
+      order: SortOrder.desc, 
     ),
     (label: 'Top Rated', field: ProductSortField.rating, order: SortOrder.desc),
     (

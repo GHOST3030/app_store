@@ -30,8 +30,13 @@ class ProductState {
   final bool isLoadingMore;
   final ProductFailure? failure;
 
-  /// ISO-8601 `createdAt` of the last loaded product — used as cursor.
+  /// ISO-8601 `createdAt` of the last loaded product — used for cursor
+  /// pagination when sort is `createdAt DESC` (default).
   final String? cursor;
+
+  /// Number of items loaded — used for offset pagination when sort is
+  /// any field other than `createdAt`.
+  final int offset;
 
   const ProductState({
     this.products = const [],
@@ -41,7 +46,13 @@ class ProductState {
     this.isLoadingMore = false,
     this.failure,
     this.cursor,
+    this.offset = 0,
   });
+
+  /// True when the default sort is active (createdAt DESC) and cursor
+  /// pagination should be used. False → offset pagination.
+  bool get usesCursorPagination =>
+      query.sortBy == null || query.sortBy == ProductSortField.createdAt;
 
   ProductState copyWith({
     List<ProductModel>? products,
@@ -51,6 +62,7 @@ class ProductState {
     bool? isLoadingMore,
     ProductFailure? failure,
     String? cursor,
+    int? offset,
     bool clearFailure = false,
     bool clearCursor = false,
   }) {
@@ -62,6 +74,7 @@ class ProductState {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       failure: clearFailure ? null : failure ?? this.failure,
       cursor: clearCursor ? null : cursor ?? this.cursor,
+      offset: offset ?? this.offset,
     );
   }
 }

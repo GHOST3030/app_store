@@ -15,15 +15,20 @@ class SupabaseProductRepository implements ProductRepository {
   Future<List<ProductModel>> getProducts({
     int limit = 20,
     String? cursor,
+    int offset = 0,
     ProductQuery? query,
   }) async {
     // 1. Start builder
     var builder = _client.from('products').select();
 
-    // 2. Apply filters (does NOT reassign builder — just chains)
+    // 2. Apply filters (chain only, never reassign to a new select)
     if (query != null) {
       if (query.search != null && query.search!.isNotEmpty) {
-        builder = builder.ilike('title', '%${query.search}%');
+        // Escape Postgres wildcards in user input
+        final safeSearch = query.search!
+            .replaceAll('%', r'\%')
+            .replaceAll('_', r'\_');
+        builder = builder.ilike('title', '%$safeSearch%');
       }
       if (query.minPrice != null) {
         builder = builder.gte('price', query.minPrice!);
@@ -45,7 +50,7 @@ class SupabaseProductRepository implements ProductRepository {
       }
     }
 
-    // 3. Apply cursor (true cursor-based pagination via createdAt)
+    // 3. Pagination — cursor (createdAt DESC) vs offset (any other sort)
     if (cursor != null) {
       builder = builder.lt('created_at', cursor);
     }
@@ -54,10 +59,17 @@ class SupabaseProductRepository implements ProductRepository {
     final sortColumn = _columnFor(query?.sortBy);
     final ascending = query?.sortOrder == SortOrder.asc;
 
-    final response = await builder
+    var finalBuilder = builder
         .order(sortColumn, ascending: ascending)
         .order('id', ascending: true) // tie-breaker for stable sort
         .limit(limit);
+
+    // 5. Apply offset-based pagination when cursor is not used
+    if (cursor == null && offset > 0) {
+      finalBuilder = finalBuilder.range(offset, offset + limit - 1);
+    }
+
+    final response = await finalBuilder;
 
     return (response as List)
         .map((row) => ProductModel.fromSupabase(row as Map<String, dynamic>))

@@ -32,8 +32,9 @@ final featuredProductsProvider = Provider<List<ProductModel>>((ref) {
       ?? const [];
 });
 
+/// FIX: uses .select() for granular rebuilds.
 final productIsLoadingProvider = Provider<bool>((ref) {
-  return ref.watch(productNotifierProvider).isLoading;
+  return ref.watch(productNotifierProvider.select((v) => v.isLoading));
 });
 
 final productIsLoadingMoreProvider = Provider<bool>((ref) {

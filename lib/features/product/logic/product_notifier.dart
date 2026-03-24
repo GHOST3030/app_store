@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/product_query.dart';
 import 'product_providers.dart';
@@ -11,6 +12,9 @@ import 'product_state.dart';
 const _kPageSize = 20;
 
 class ProductNotifier extends AsyncNotifier<ProductState> {
+  /// Local mutex — prevents overlapping loadMore() calls.
+  bool _loadingMore = false;
+
   // ─── Build (initial load) ─────────────────────────────────────────────────
 
   @override
@@ -19,25 +23,30 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
   // ─── Public API ───────────────────────────────────────────────────────────
 
   /// Pull-to-refresh: reloads page 1 + featured products.
+  /// FIX 1: reads query BEFORE clobbering state with AsyncLoading.
   Future<void> refresh() async {
+    final currentQuery = state.value?.query;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _initialFetch(
-          query: state.value?.query,
-        ));
+    state = await AsyncValue.guard(() => _initialFetch(query: currentQuery));
   }
 
   /// Appends the next page of products.
+  /// FIX 3: local mutex instead of state-derived flag.
   Future<void> loadMore() async {
     final current = state.value;
-    if (current == null || current.isLoadingMore || !current.hasMore) return;
+    if (current == null || _loadingMore || !current.hasMore) return;
 
+    _loadingMore = true;
     state = AsyncData(current.copyWith(isLoadingMore: true, clearFailure: true));
 
     try {
       final repo = ref.read(productRepositoryProvider);
+
+      // FIX 2: use cursor or offset depending on sort
       final page = await repo.getProducts(
         limit: _kPageSize,
-        cursor: current.cursor,
+        cursor: current.usesCursorPagination ? current.cursor : null,
+        offset: current.usesCursorPagination ? 0 : current.offset,
         query: current.query,
       );
 
@@ -49,9 +58,10 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
         products: [...current.products, ...unique],
         isLoadingMore: false,
         hasMore: page.length >= _kPageSize,
-        cursor: unique.isNotEmpty
+        cursor: (current.usesCursorPagination && unique.isNotEmpty)
             ? unique.last.createdAt.toIso8601String()
             : current.cursor,
+        offset: current.offset + page.length,
       ));
     } catch (e, st) {
       log('loadMore failed', error: e, stackTrace: st);
@@ -59,6 +69,8 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
         isLoadingMore: false,
         failure: _mapError(e),
       ));
+    } finally {
+      _loadingMore = false;
     }
   }
 
@@ -152,25 +164,33 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
       cursor: products.isNotEmpty
           ? products.last.createdAt.toIso8601String()
           : null,
+      offset: products.length,
     );
   }
 
   Future<void> _reload(ProductQuery query) async {
+    _loadingMore = false; // reset mutex on full reload
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _initialFetch(query: query));
   }
 
+  /// FIX 5: proper type-based error mapping — no string matching.
   ProductFailure _mapError(Object error) {
-    if (error is SocketException) {
-      return NetworkFailure(error.message);
+    // Network errors
+    if (error is SocketException) return NetworkFailure(error.message);
+    if (error is TimeoutException) {
+      return NetworkFailure(error.message ?? 'Request timed out');
     }
-    final msg = error.toString().toLowerCase();
-    if (msg.contains('socket') || msg.contains('timeout')) {
-      return NetworkFailure(error.toString());
+
+    // Supabase/PostgREST errors — check HTTP status code
+    if (error is PostgrestException) {
+      final code = int.tryParse(error.code ?? '');
+      if (code != null && code >= 500) {
+        return ServerFailure(error.message);
+      }
+      return UnknownFailure(error.message);
     }
-    if (msg.contains('500') || msg.contains('server')) {
-      return ServerFailure(error.toString());
-    }
+
     return UnknownFailure(error.toString());
   }
 }
