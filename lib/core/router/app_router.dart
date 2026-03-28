@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:new_auth/features/product/presentation/pages/home_page.dart';
 import '../../features/auth/logic/providers_auth.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/signup_page.dart';
@@ -34,7 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
-      GoRoute(path: '/home', builder: (context, state) =>HomePage()),
+      GoRoute(path: '/home', builder: (context, state) =>Text("Home")),
 
       GoRoute(
         path: '/search',
