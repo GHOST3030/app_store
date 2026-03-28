@@ -1,63 +1,90 @@
+import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
 
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../data/product_query.dart';
-import '../data/product_repository.dart';
+import 'product_providers.dart';
 import 'product_state.dart';
 
-class ProductNotifier extends StateNotifier<ProductState> {
-  final ProductRepository _repository;
+const _kPageSize = 20;
 
-  ProductNotifier(this._repository) : super(const ProductState());
+class ProductNotifier extends AsyncNotifier<ProductState> {
+  /// Local mutex — prevents overlapping loadMore() calls.
+  bool _loadingMore = false;
 
-  // ─── Load / Refresh ───────────────────────────────────────────────────────
+  // ─── Build (initial load) ─────────────────────────────────────────────────
 
-  /// Loads the first page. Replaces any existing products.
-  Future<void> loadProducts({bool refresh = false}) async {
-    if (state.isLoading) return;
-    if (!refresh && state.isSuccess) return;
+  @override
+  FutureOr<ProductState> build() => _initialFetch();
 
-    state = state.copyWith(
-      status: ProductStatus.loading,
-      products: [],
-      cursor: 0,
-      hasMore: true,
-      clearError: true,
-    );
+  // ─── Public API ───────────────────────────────────────────────────────────
 
-    await _fetchPage(cursor: 0, append: false);
-    await _loadFeatured();
+  /// Pull-to-refresh: reloads page 1 + featured products.
+  /// FIX 1: reads query BEFORE clobbering state with AsyncLoading.
+  Future<void> refresh() async {
+    final currentQuery = state.value?.query;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _initialFetch(query: currentQuery));
   }
 
-  /// Refreshes products (e.g. pull-to-refresh).
-  Future<void> refresh() => loadProducts(refresh: true);
-
-  // ─── Pagination ───────────────────────────────────────────────────────────
-
-  /// Loads the next page and appends results.
+  /// Appends the next page of products.
+  /// FIX 3: local mutex instead of state-derived flag.
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    final current = state.value;
+    if (current == null || _loadingMore || !current.hasMore) return;
 
-    state = state.copyWith(status: ProductStatus.loadingMore);
-    await _fetchPage(cursor: state.cursor, append: true);
+    _loadingMore = true;
+    state = AsyncData(current.copyWith(isLoadingMore: true, clearFailure: true));
+
+    try {
+      final repo = ref.read(productRepositoryProvider);
+
+      // FIX 2: use cursor or offset depending on sort
+      final page = await repo.getProducts(
+        limit: _kPageSize,
+        cursor: current.usesCursorPagination ? current.cursor : null,
+        offset: current.usesCursorPagination ? 0 : current.offset,
+        query: current.query,
+      );
+
+      // De-duplicate by id
+      final existingIds = {for (final p in current.products) p.id};
+      final unique = page.where((p) => !existingIds.contains(p.id)).toList();
+
+      state = AsyncData(current.copyWith(
+        products: [...current.products, ...unique],
+        isLoadingMore: false,
+        hasMore: page.length >= _kPageSize,
+        cursor: (current.usesCursorPagination && unique.isNotEmpty)
+            ? unique.last.createdAt.toIso8601String()
+            : current.cursor,
+        offset: current.offset + page.length,
+      ));
+    } catch (e, st) {
+      log('loadMore failed', error: e, stackTrace: st);
+      state = AsyncData(current.copyWith(
+        isLoadingMore: false,
+        failure: _mapError(e),
+      ));
+    } finally {
+      _loadingMore = false;
+    }
   }
 
-  // ─── Search ───────────────────────────────────────────────────────────────
-
+  /// Free-text search.
   Future<void> search(String keyword) async {
     final trimmed = keyword.trim();
-    final updated = state.query.copyWith(
+    final q = (state.value?.query ?? const ProductQuery()).copyWith(
       search: trimmed.isEmpty ? null : trimmed,
       clearSearch: trimmed.isEmpty,
     );
-    await _applyQuery(updated);
+    await _reload(q);
   }
 
-  Future<void> clearSearch() async {
-    await _applyQuery(state.query.copyWith(clearSearch: true));
-  }
-
-  // ─── Filters ──────────────────────────────────────────────────────────────
-
+  /// Apply filters.
   Future<void> setFilter({
     double? minPrice,
     double? maxPrice,
@@ -72,7 +99,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
     bool clearCategoryId = false,
     bool clearOnlyFeatured = false,
   }) async {
-    final updated = state.query.copyWith(
+    final q = (state.value?.query ?? const ProductQuery()).copyWith(
       minPrice: minPrice,
       maxPrice: maxPrice,
       minRating: minRating,
@@ -86,90 +113,84 @@ class ProductNotifier extends StateNotifier<ProductState> {
       clearCategoryId: clearCategoryId,
       clearOnlyFeatured: clearOnlyFeatured,
     );
-    await _applyQuery(updated);
+    await _reload(q);
   }
 
-  Future<void> clearFilters() async {
-    await _applyQuery(
-      ProductQuery(search: state.query.search),
-    );
-  }
-
-  // ─── Sort ─────────────────────────────────────────────────────────────────
-
+  /// Change sort order.
   Future<void> setSort({
     required ProductSortField sortBy,
-    SortOrder order = SortOrder.asc,
+    SortOrder order = SortOrder.desc,
   }) async {
-    final updated = state.query.copyWith(sortBy: sortBy, sortOrder: order);
-    await _applyQuery(updated);
-  }
-
-  Future<void> clearSort() async {
-    await _applyQuery(state.query.copyWith(clearSortBy: true));
-  }
-
-  // ─── Private helpers ─────────────────────────────────────────────────────
-
-  /// Applies a new query by resetting pagination and reloading.
-  Future<void> _applyQuery(ProductQuery newQuery) async {
-    if (newQuery == state.query) return;
-
-    state = state.copyWith(
-      status: ProductStatus.loading,
-      query: newQuery,
-      products: [],
-      cursor: 0,
-      hasMore: true,
-      clearError: true,
+    final q = (state.value?.query ?? const ProductQuery()).copyWith(
+      sortBy: sortBy,
+      sortOrder: order,
     );
-
-    await _fetchPage(cursor: 0, append: false);
+    await _reload(q);
   }
 
-  Future<void> _fetchPage({
-    required int cursor,
-    required bool append,
-  }) async {
-    try {
-      final newProducts = await _repository.getProducts(
-        query: state.query,
-        cursor: cursor,
-        limit: state.limit,
-      );
-
-      // De-duplicate by id to prevent ghost entries
-      final existingIds = {for (final p in state.products) p.id};
-      final unique =
-          newProducts.where((p) => !existingIds.contains(p.id)).toList();
-
-      final merged = append ? [...state.products, ...unique] : unique;
-
-      state = state.copyWith(
-        status: ProductStatus.success,
-        products: merged,
-        cursor: cursor + newProducts.length,
-        hasMore: newProducts.length >= state.limit,
-        clearError: true,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: ProductStatus.failure,
-        errorMessage: e.toString(),
-      );
-    }
+  /// Remove all filters (keeps search term).
+  Future<void> clearFilters() async {
+    final search = state.value?.query.search;
+    await _reload(ProductQuery(search: search));
   }
 
-  Future<void> _loadFeatured() async {
-    try {
-      final featured = await _repository.getProducts(
-        query: const ProductQuery(onlyFeatured: true),
-        cursor: 0,
-        limit: 10,
-      );
-      state = state.copyWith(featuredProducts: featured);
-    } catch (_) {
-      // Featured section failing silently is acceptable
+  /// Remove sort (keeps filters intact).
+  Future<void> clearSort() async {
+    final q = (state.value?.query ?? const ProductQuery()).copyWith(
+      clearSortBy: true,
+    );
+    await _reload(q);
+  }
+
+  // ─── Private ──────────────────────────────────────────────────────────────
+
+  Future<ProductState> _initialFetch({ProductQuery? query}) async {
+    final repo = ref.read(productRepositoryProvider);
+    final q = query ?? const ProductQuery();
+
+    final results = await Future.wait([
+      repo.getProducts(limit: _kPageSize, query: q),
+      repo.getFeaturedProducts(),
+    ]);
+
+    final products = results[0];
+    final featured = results[1];
+
+    return ProductState(
+      products: products,
+      featuredProducts: featured,
+      query: q,
+      hasMore: products.length >= _kPageSize,
+      cursor: products.isNotEmpty
+          ? products.last.createdAt.toIso8601String()
+          : null,
+      offset: products.length,
+    );
+  }
+
+  Future<void> _reload(ProductQuery query) async {
+    _loadingMore = false; // reset mutex on full reload
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _initialFetch(query: query));
+  }
+
+  /// FIX 5: proper type-based error mapping — no string matching.
+  ProductFailure _mapError(Object error) {
+    // Network errors
+    if (error is SocketException) return NetworkFailure(error.message);
+    if (error is TimeoutException) {
+      return NetworkFailure(error.message ?? 'Request timed out');
     }
+
+    // Supabase/PostgREST errors — check HTTP status code
+    if (error is PostgrestException) {
+      final code = int.tryParse(error.code ?? '');
+      if (code != null && code >= 500) {
+        return ServerFailure(error.message);
+      }
+      return UnknownFailure(error.message);
+    }
+
+    return UnknownFailure(error.toString());
   }
 }

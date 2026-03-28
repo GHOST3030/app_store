@@ -16,9 +16,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => ref.read(productNotifierProvider.notifier).loadProducts(),
-    );
     _scroll.addListener(_onScroll);
   }
 

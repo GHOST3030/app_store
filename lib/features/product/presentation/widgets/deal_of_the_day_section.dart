@@ -1,52 +1,26 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../logic/deal_timer_notifier.dart';
 import '../../logic/product_providers.dart';
-import '../../logic/product_state.dart';
+import '../../data/product_model.dart';
 import 'export_allthings.dart';
 import 'product_card.dart';
 
-class DealOfTheDaySection extends ConsumerStatefulWidget {
+class DealOfTheDaySection extends ConsumerWidget {
   const DealOfTheDaySection({super.key});
-
-  @override
-  ConsumerState<DealOfTheDaySection> createState() =>
-      _DealOfTheDaySectionState();
-}
-
-class _DealOfTheDaySectionState extends ConsumerState<DealOfTheDaySection> {
-  late Timer _timer;
-  late DateTime _end;
-  Duration _left = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _end = DateTime.now().add(const Duration(hours: 22, minutes: 55, seconds: 20));
-    _tick();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-  }
-
-  void _tick() {
-    final d = _end.difference(DateTime.now());
-    setState(() => _left = d.isNegative ? Duration.zero : d);
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
 
   String _pad(int n) => n.toString().padLeft(2, '0');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final r = HomeResponsive.of(context);
-    final state = ref.watch(productNotifierProvider);
-    final hh = _pad(_left.inHours);
-    final mm = _pad(_left.inMinutes.remainder(60));
-    final ss = _pad(_left.inSeconds.remainder(60));
+    final left = ref.watch(dealTimerProvider);
+    final products = ref.watch(productListProvider);
+    final isLoading = ref.watch(productIsLoadingProvider);
+
+    final hh = _pad(left.inHours);
+    final mm = _pad(left.inMinutes.remainder(60));
+    final ss = _pad(left.inSeconds.remainder(60));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +39,11 @@ class _DealOfTheDaySectionState extends ConsumerState<DealOfTheDaySection> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.timer_outlined, color: HomeColors.white, size: 18),
+                const Icon(
+                  Icons.timer_outlined,
+                  color: HomeColors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -82,7 +60,7 @@ class _DealOfTheDaySectionState extends ConsumerState<DealOfTheDaySection> {
                       Text(
                         '${hh}h  ${mm}m  ${ss}s remaining',
                         style: TextStyle(
-                          color: HomeColors.white.withOpacity(0.85),
+                          color: HomeColors.white.withValues(alpha: 0.85),
                           fontSize: r.captionFontSize,
                         ),
                       ),
@@ -102,8 +80,11 @@ class _DealOfTheDaySectionState extends ConsumerState<DealOfTheDaySection> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      const Icon(Icons.arrow_forward_rounded,
-                          color: HomeColors.white, size: 14),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: HomeColors.white,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -117,36 +98,51 @@ class _DealOfTheDaySectionState extends ConsumerState<DealOfTheDaySection> {
         // ── Product list ────────────────────────────────────────────────────
         SizedBox(
           height: r.dealListHeight,
-          child: _buildList(state, r),
+          child: _ProductList(products: products, isLoading: isLoading, r: r),
         ),
       ],
     );
   }
+}
 
-  Widget _buildList(ProductState state, HomeResponsive r) {
-    if (state.isLoading) {
+class _ProductList extends StatelessWidget {
+  const _ProductList({
+    required this.products,
+    required this.isLoading,
+    required this.r,
+  });
+
+  final List<ProductModel> products;
+  final bool isLoading;
+  final HomeResponsive r;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
       return ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: r.hPad),
         itemCount: 4,
-        separatorBuilder: (_, __) => SizedBox(width: r.gridSpacing),
-        itemBuilder: (_, __) => _ShimmerCard(r: r),
+        separatorBuilder: (_, _2) => SizedBox(width: r.gridSpacing),
+        itemBuilder: (_, _2) => _ShimmerCard(r: r),
       );
     }
 
-    if (state.products.isEmpty) {
+    if (products.isEmpty) {
       return const Center(
-        child: Text('No deals right now',
-            style: TextStyle(color: HomeColors.textMid)),
+        child: Text(
+          'No deals right now',
+          style: TextStyle(color: HomeColors.textMid),
+        ),
       );
     }
 
     return ListView.separated(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: r.hPad),
-      itemCount: state.products.length,
-      separatorBuilder: (_, __) => SizedBox(width: r.gridSpacing),
-      itemBuilder: (_, i) => ProductCard(product: state.products[i]),
+      itemCount: products.length,
+      separatorBuilder: (_, _2) => SizedBox(width: r.gridSpacing),
+      itemBuilder: (_, i) => ProductCard(product: products[i]),
     );
   }
 }
@@ -168,10 +164,10 @@ class _ShimmerCardState extends State<_ShimmerCard>
     duration: const Duration(milliseconds: 1000),
   )..repeat(reverse: true);
 
-  late final Animation<double> _opacity =
-      Tween<double>(begin: 0.4, end: 1.0).animate(
-    CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-  );
+  late final Animation<double> _opacity = Tween<double>(
+    begin: 0.4,
+    end: 1.0,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
 
   @override
   void dispose() {
@@ -184,7 +180,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
     final r = widget.r;
     return AnimatedBuilder(
       animation: _opacity,
-      builder: (_, __) => Opacity(
+      builder: (_, _2) => Opacity(
         opacity: _opacity.value,
         child: Container(
           width: r.cardWidth,
@@ -200,7 +196,8 @@ class _ShimmerCardState extends State<_ShimmerCard>
                 decoration: BoxDecoration(
                   color: HomeColors.divider,
                   borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(r.borderRadius)),
+                    top: Radius.circular(r.borderRadius),
+                  ),
                 ),
               ),
               Padding(

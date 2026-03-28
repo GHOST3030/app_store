@@ -1,926 +1,534 @@
-// test/features/product/logic/product_notifier_supabase_test.dart
+// test/features/product/logic/product_notifier_test.dart
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:new_auth/core/network/supabase_client_provider.dart';
-import 'package:new_auth/mykeysecret/secret.dart';
+import 'package:new_auth/features/product/data/product_model.dart';
+import 'package:new_auth/features/product/data/product_query.dart';
+import 'package:new_auth/features/product/data/product_repository.dart';
 import 'package:new_auth/features/product/logic/product_providers.dart';
 import 'package:new_auth/features/product/logic/product_state.dart';
-import 'package:supabase/supabase.dart';
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Mock ─────────────────────────────────────────────────────────────────────
 
-// ─── Fixed seed IDs ───────────────────────────────────────────────────────────
+class MockProductRepository implements ProductRepository {
+  List<ProductModel> stubbedProducts = [];
+  List<ProductModel> stubbedFeatured = [];
+  Object? errorToThrow;
 
-const _id1 = '00000000-0000-0000-0000-000000000001';
-const _id2 = '00000000-0000-0000-0000-000000000002';
-const _id3 = '00000000-0000-0000-0000-000000000003';
-const _id4 = '00000000-0000-0000-0000-000000000004';
-const _id5 = '00000000-0000-0000-0000-000000000005';
-const _testIds = [_id1, _id2, _id3, _id4, _id5];
+  /// Records the arguments of the last `getProducts` call.
+  int? lastLimit;
+  String? lastCursor;
+  int? lastOffset;
+  ProductQuery? lastQuery;
 
-final _seedRows = [
-  {
-    'id': _id1,
-    'title': 'Worker Boots',
-    'description': 'Durable boots',
-    'price': 80.0,
-    'discount_price': null,
-    'images': <String>[],
-    'category_id': 'footwear',
-    'stock': 15,
-    'rating': 4.8,
-    'created_at': '2024-01-01T00:00:00.000Z',
-  },
-  {
-    'id': _id2,
-    'title': 'Running Shoes',
-    'description': 'Lightweight runners',
-    'price': 120.0,
-    'discount_price': 99.0,
-    'images': <String>[],
-    'category_id': 'footwear',
-    'stock': 5,
-    'rating': 4.2,
-    'created_at': '2024-02-01T00:00:00.000Z',
-  },
-  {
-    'id': _id3,
-    'title': 'Leather Wallet',
-    'description': 'Slim wallet',
-    'price': 35.0,
-    'discount_price': null,
-    'images': <String>[],
-    'category_id': 'accessories',
-    'stock': 0,
-    'rating': 3.9,
-    'created_at': '2024-03-01T00:00:00.000Z',
-  },
-  {
-    'id': _id4,
-    'title': 'Canvas Backpack',
-    'description': 'Everyday backpack',
-    'price': 55.0,
-    'discount_price': null,
-    'images': <String>[],
-    'category_id': 'bags',
-    'stock': 30,
-    'rating': 4.6,
-    'created_at': '2024-04-01T00:00:00.000Z',
-  },
-  {
-    'id': _id5,
-    'title': 'Wool Scarf',
-    'description': 'Winter scarf',
-    'price': 25.0,
-    'discount_price': null,
-    'images': <String>[],
-    'category_id': 'accessories',
-    'stock': 8,
-    'rating': 3.5,
-    'created_at': '2024-05-01T00:00:00.000Z',
-  },
-];
+  @override
+  Future<List<ProductModel>> getProducts({
+    int limit = 20,
+    String? cursor,
+    int offset = 0,
+    ProductQuery? query,
+  }) async {
+    lastLimit = limit;
+    lastCursor = cursor;
+    lastOffset = offset;
+    lastQuery = query;
+    await Future<void>.delayed(Duration.zero);
+    if (errorToThrow != null) throw errorToThrow!;
+    return stubbedProducts;
+  }
+
+  @override
+  Future<List<ProductModel>> getFeaturedProducts() async {
+    await Future<void>.delayed(Duration.zero);
+    if (errorToThrow != null) throw errorToThrow!;
+    return stubbedFeatured;
+  }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-final _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+ProductModel _product(String id, {DateTime? createdAt, double price = 10}) =>
+    ProductModel(
+      id: id,
+      title: 'Product $id',
+      description: 'Desc',
+      price: price,
+      images: const [],
+      categoryId: 'cat',
+      stock: 5,
+      rating: 4.0,
+      createdAt: createdAt ?? DateTime(2024),
+    );
 
-Future<void> _seed() async => await _client.from('products').upsert(_seedRows);
-
-Future<void> _clean() async =>
-    await _client.from('products').delete().inFilter('id', _testIds);
-
-/// Fresh container wired to the real Supabase client every test.
-ProviderContainer _makeContainer() {
+ProviderContainer _container(ProductRepository mock) {
   return ProviderContainer(
-    overrides: [supabaseClientProvider.overrideWithValue(_client)],
+    overrides: [productRepositoryProvider.overrideWithValue(mock)],
   );
+}
+
+/// Waits for the AsyncNotifier to resolve past AsyncLoading.
+Future<ProductState> _waitForData(ProviderContainer c) async {
+  return await c.read(productNotifierProvider.future);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
-  setUpAll(() {
-    _client;
-  });
+  // ── build / initial load ────────────────────────────────────────────────────
 
-  //setUp(_seed);
-  //tearDown(_clean);
+  group('build (initial load)', () {
+    test('loads products and featured on first read', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = [_product('1'), _product('2')]
+        ..stubbedFeatured = [_product('f1')];
 
-  // ─── initial state ──────────────────────────────────────────────────────────
+      final c = _container(mock);
+      addTearDown(c.dispose);
 
-  group('initial state', () {
-    test('starts with empty products and initial status', () {
-      final container = _makeContainer();
-      addTearDown(container.dispose);
+      final data = await _waitForData(c);
 
-       final state = container.read(productNotifierProvider);
-      // final prod = state.products;
-      // for (var element in prod) {
-      //   print(element.id);
-      // }
-      expect(state.products, isEmpty);
-      expect(state.status, ProductStatus.initial);
-      expect(state.hasMore, isTrue);
-      expect(state.cursor, 0);
-      expect(state.errorMessage, isNull);
+      expect(data.products.length, 2);
+      expect(data.featuredProducts.length, 1);
+      expect(data.failure, isNull);
+      expect(data.cursor, isNotNull); // set from last product
+      expect(data.offset, 2);
+    });
+
+    test('hasMore = false when < pageSize items returned', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = [_product('1')]; // less than 20
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      final data = await _waitForData(c);
+      expect(data.hasMore, isFalse);
     });
   });
 
-  // ─── loadProducts ───────────────────────────────────────────────────────────
+  // ── refresh ─────────────────────────────────────────────────────────────────
 
-  group('loadProducts', () {
-    test('transitions loading → success and returns seeded products', () async {
-      final container = _makeContainer();
-      addTearDown(container.dispose);
+  group('refresh', () {
+    test('preserves the current query on refresh (Fix 1)', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = [_product('1')];
 
-      final states = <ProductState>[];
-      container.listen(
-        productNotifierProvider,
-        (_, next) => states.add(next),
-        fireImmediately: false,
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      // Apply a search first
+      await c.read(productNotifierProvider.notifier).search('shoes');
+      await _waitForData(c);
+      expect(mock.lastQuery?.search, 'shoes');
+
+      // Now refresh — the search should survive
+      mock.stubbedProducts = [_product('2')];
+      await c.read(productNotifierProvider.notifier).refresh();
+      final data = await _waitForData(c);
+
+      expect(mock.lastQuery?.search, 'shoes'); // ← FIX 1 verified
+      expect(data.products.length, 1);
+    });
+  });
+
+  // ── loadMore ────────────────────────────────────────────────────────────────
+
+  group('loadMore', () {
+    test('appends products and advances cursor/offset', () async {
+      // Page 1
+      final page1 = List.generate(20, (i) => _product(
+        'p$i',
+        createdAt: DateTime(2024, 1, 20 - i),
+      ));
+      final mock = MockProductRepository()..stubbedProducts = page1;
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+      expect(c.read(productNotifierProvider).requireValue.products.length, 20);
+
+      // Page 2
+      final page2 = [_product('x1'), _product('x2')];
+      mock.stubbedProducts = page2;
+
+      await c.read(productNotifierProvider.notifier).loadMore();
+      final data = c.read(productNotifierProvider).requireValue;
+
+      expect(data.products.length, 22); // 20 + 2
+      expect(data.hasMore, isFalse); // page2 < 20
+      expect(data.offset, 22);
+    });
+
+    test('de-duplicates products by id', () async {
+      final page1 = List.generate(20, (i) => _product('p$i'));
+      final mock = MockProductRepository()..stubbedProducts = page1;
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      // Page 2 returns some duplicates
+      mock.stubbedProducts = [_product('p0'), _product('new1')];
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      final data = c.read(productNotifierProvider).requireValue;
+      final ids = data.products.map((p) => p.id).toList();
+      expect(ids.where((id) => id == 'p0').length, 1); // no duplicate
+      expect(ids.contains('new1'), isTrue);
+    });
+
+    test('skips when hasMore is false', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = [_product('1')]; // < 20 → hasMore = false
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+      expect(c.read(productNotifierProvider).requireValue.hasMore, isFalse);
+
+      mock.stubbedProducts = [_product('should-not-appear')];
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      final data = c.read(productNotifierProvider).requireValue;
+      expect(data.products.length, 1); // unchanged
+    });
+
+    test('double-call race condition is prevented (Fix 3)', () async {
+      // Slow mock — simulates network delay
+      final mock = _SlowMockRepository()
+        ..stubbedProducts = List.generate(20, (i) => _product('p$i'))
+        ..stubbedFeatured = [];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      mock.stubbedProducts = [_product('new1')];
+      mock.callCount = 0;
+
+      // Fire two loadMore calls simultaneously
+      final f1 = c.read(productNotifierProvider.notifier).loadMore();
+      final f2 = c.read(productNotifierProvider.notifier).loadMore();
+      await Future.wait([f1, f2]);
+
+      // Only one actual network call should have been made
+      expect(mock.callCount, 1);
+    });
+
+    test('uses offset pagination when sort != createdAt (Fix 2)', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = List.generate(20, (i) => _product('p$i', price: i * 10));
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      // Change sort to price
+      await c.read(productNotifierProvider.notifier).setSort(
+            sortBy: ProductSortField.price,
+            order: SortOrder.asc,
+          );
+      await _waitForData(c);
+
+      // Now loadMore — should use offset, not cursor
+      mock.stubbedProducts = [_product('new1', price: 999)];
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      expect(mock.lastCursor, isNull); // ← no cursor
+      expect(mock.lastOffset, greaterThan(0)); // ← uses offset
+    });
+  });
+
+  // ── search ──────────────────────────────────────────────────────────────────
+
+  group('search', () {
+    test('sets search in query and reloads', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      mock.stubbedProducts = [_product('found')];
+      await c.read(productNotifierProvider.notifier).search('boots');
+      final data = await _waitForData(c);
+
+      expect(mock.lastQuery?.search, 'boots');
+      expect(data.products.first.id, 'found');
+    });
+
+    test('empty string clears search', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).search('boots');
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).search('');
+      await _waitForData(c);
+
+      expect(mock.lastQuery?.search, isNull);
+    });
+
+    test('trims whitespace', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).search('  boots  ');
+      await _waitForData(c);
+
+      expect(mock.lastQuery?.search, 'boots');
+    });
+  });
+
+  // ── setFilter / clearFilters ────────────────────────────────────────────────
+
+  group('filters', () {
+    test('setFilter applies filter params to query', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).setFilter(
+            minPrice: 50.0,
+            onlyAvailable: true,
+          );
+      await _waitForData(c);
+
+      expect(mock.lastQuery?.minPrice, 50.0);
+      expect(mock.lastQuery?.onlyAvailable, true);
+    });
+
+    test('clearFilters preserves search term', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      // Set search + filter
+      await c.read(productNotifierProvider.notifier).search('boots');
+      await _waitForData(c);
+      await c.read(productNotifierProvider.notifier).setFilter(minPrice: 100);
+      await _waitForData(c);
+
+      // Clear filters
+      await c.read(productNotifierProvider.notifier).clearFilters();
+      await _waitForData(c);
+
+      expect(mock.lastQuery?.search, 'boots'); // preserved
+      expect(mock.lastQuery?.minPrice, isNull); // cleared
+    });
+  });
+
+  // ── setSort / clearSort ─────────────────────────────────────────────────────
+
+  group('sort', () {
+    test('setSort updates query and reloads', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).setSort(
+            sortBy: ProductSortField.price,
+            order: SortOrder.asc,
+          );
+      final data = await _waitForData(c);
+
+      expect(data.query.sortBy, ProductSortField.price);
+      expect(data.query.sortOrder, SortOrder.asc);
+    });
+
+    test('clearSort nullifies sortBy', () async {
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).setSort(
+            sortBy: ProductSortField.price,
+          );
+      await _waitForData(c);
+
+      await c.read(productNotifierProvider.notifier).clearSort();
+      final data = await _waitForData(c);
+
+      expect(data.query.sortBy, isNull);
+    });
+  });
+
+  // ── error handling ──────────────────────────────────────────────────────────
+
+  group('error handling', () {
+    test('network error during build produces AsyncError', () async {
+      final mock = MockProductRepository()
+        ..errorToThrow = const SocketException('no internet');
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      // Listen to trigger build
+      c.listen(productNotifierProvider, (_, __) {});
+
+      // Wait a moment for the build future to fail
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = c.read(productNotifierProvider);
+      expect(state.hasError, isTrue);
+      expect(state.error, isA<SocketException>());
+    });
+
+    test('loadMore error maps SocketException to NetworkFailure (Fix 5)', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = List.generate(20, (i) => _product('p$i'));
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      // Make loadMore throw
+      mock.errorToThrow = const SocketException('no internet');
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      final data = c.read(productNotifierProvider).requireValue;
+      expect(data.failure, isA<NetworkFailure>());
+    });
+
+    test('loadMore error maps TimeoutException to NetworkFailure', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = List.generate(20, (i) => _product('p$i'));
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      mock.errorToThrow = TimeoutException('slow');
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      final data = c.read(productNotifierProvider).requireValue;
+      expect(data.failure, isA<NetworkFailure>());
+    });
+
+    test('loadMore error maps unknown error to UnknownFailure', () async {
+      final mock = MockProductRepository()
+        ..stubbedProducts = List.generate(20, (i) => _product('p$i'));
+
+      final c = _container(mock);
+      addTearDown(c.dispose);
+
+      await _waitForData(c);
+
+      mock.errorToThrow = Exception('something weird');
+      await c.read(productNotifierProvider.notifier).loadMore();
+
+      final data = c.read(productNotifierProvider).requireValue;
+      expect(data.failure, isA<UnknownFailure>());
+    });
+  });
+
+  // ── ProductModel.fromSupabase safety ────────────────────────────────────────
+
+  group('ProductModel.fromSupabase (Fix 8)', () {
+    test('throws FormatException when id is missing', () {
+      expect(
+        () => ProductModel.fromSupabase({'title': 'no id'}),
+        throwsFormatException,
       );
+    });
 
-      await container.read(productNotifierProvider.notifier).loadProducts();
-      // final prro = states.toList();
-      // final mm = prro.first.products;
-      // for (var element in mm) {
-      //   debugPrint(element.title);
-      // }
-      expect(states.first.status, ProductStatus.loading);
-      expect(states.last.status, ProductStatus.success);
-      // expect(states.last.products.map((p) => p.id), containsAll(_testIds));
+    test('handles null/missing fields with defaults', () {
+      final model = ProductModel.fromSupabase({
+        'id': '123',
+        // all other fields missing
+      });
+
+      expect(model.id, '123');
+      expect(model.title, '');
+      expect(model.description, '');
+      expect(model.price, 0.0);
+      expect(model.discountPrice, isNull);
+      expect(model.images, isEmpty);
+      expect(model.categoryId, '');
+      expect(model.stock, 0);
+      expect(model.rating, 0.0);
+    });
+
+    test('parses valid data correctly', () {
+      final model = ProductModel.fromSupabase({
+        'id': 'abc',
+        'title': 'Boots',
+        'description': 'Nice boots',
+        'price': 99.5,
+        'discount_price': 79.0,
+        'images': ['a.jpg', 'b.jpg'],
+        'category_id': 'footwear',
+        'stock': 10,
+        'rating': 4.8,
+        'created_at': '2024-06-15T10:00:00.000Z',
+      });
+
+      expect(model.title, 'Boots');
+      expect(model.price, 99.5);
+      expect(model.discountPrice, 79.0);
+      expect(model.images, ['a.jpg', 'b.jpg']);
+      expect(model.stock, 10);
+      expect(model.createdAt.year, 2024);
     });
   });
-  test('maps fields correctly from Supabase row', () async {
-    final container = _makeContainer();
-    addTearDown(container.dispose);
-
-    await container.read(productNotifierProvider.notifier).search('Worker');
-
-    final boots = container.read(productNotifierProvider).products.first;
-         // print(boots.title);
-    expect(boots.title, contains('Worker'));
-    // expect(boots.price, 80.0);
-    // expect(boots.rating, 4.8);
-    // expect(boots.stock, 15);
-    // expect(boots.categoryId, 'footwear');
-    // expect(boots.discountPrice, isNull);
-  });
-
-      // test('maps discount_price when present', () async {
-      //   final container = _makeContainer();
-      //   addTearDown(container.dispose);
-
-      //   await container.read(productNotifierProvider.notifier).loadProducts();
-
-      //   final shoes = container
-      //       .read(productNotifierProvider)
-      //       .products
-      //       .firstWhere((p) => p.id == _id2);
-
-      //   expect(shoes.discountPrice, 99.0);
-      // });
-
-      test('skips when already loading', () async {
-        final container = _makeContainer();
-        addTearDown(container.dispose);
-
-        // Force loading state
-        container.read(productNotifierProvider.notifier).state = container
-            .read(productNotifierProvider)
-            .copyWith(status: ProductStatus.loading);
-
-        await container.read(productNotifierProvider.notifier).loadProducts();
-
-        // State must stay loading — no success transition happened
-        expect(container.read(productNotifierProvider).status, ProductStatus.loading);
-      });
-
-      test('skips when already success and refresh=false', () async {
-        final container = _makeContainer();
-        addTearDown(container.dispose);
-
-        await container.read(productNotifierProvider.notifier).loadProducts();
-
-        // Mutate DB — delete a row
-        await _client.from('products').delete().eq('title', 'Worker 6');
-
-        // Without refresh, notifier should NOT re-fetch
-        await container.read(productNotifierProvider.notifier).loadProducts();
-
-        // _id1 still present because no re-fetch happened
-        final ids = container.read(productNotifierProvider).products.map((p) => p.title);
-        expect(ids, contains('Worker'));
-      });
-
-  //     test('refresh=true re-fetches and reflects DB changes', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).loadProducts();
-
-  //       // Delete a row from DB
-  //       await _client.from('products').delete().eq('id', _id1);
-
-  //       // With refresh, notifier should re-fetch
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       final ids = container.read(productNotifierProvider).products.map((p) => p.id);
-  //       expect(ids, isNot(contains(_id1)));
-  //     });
-
-  //     test('sets hasMore = false when items returned < limit', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       // Force limit bigger than seed count so all 5 come back at once
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 100);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       expect(container.read(productNotifierProvider).hasMore, isFalse);
-  //     });
-
-  //     test('sets hasMore = true when items returned == limit', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       // Set limit to 2 — we have 5 seed rows so 2 will come back
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 2);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       expect(container.read(productNotifierProvider).hasMore, isTrue);
-  //     });
-
-  //     test('cursor equals number of items returned', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 3);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       expect(container.read(productNotifierProvider).cursor, 3);
-  //     });
-
-  //     test('also loads featured products (rating >= 4.5)', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).loadProducts();
-
-  //       final featuredIds = container
-  //           .read(productNotifierProvider)
-  //           .featuredProducts
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       // Boots (4.8) and Backpack (4.6) qualify
-  //       expect(featuredIds, containsAll([_id1, _id4]));
-  //       // Scarf (3.5) does not
-  //       expect(featuredIds, isNot(contains(_id5)));
-  //     });
-  //   });
-
-  //   // ─── loadMore ───────────────────────────────────────────────────────────────
-
-  //   group('loadMore', () {
-  //     test('appends next page and advances cursor', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       // limit=3 → page 1 gets 3 items
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 3);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       final afterPage1 = container.read(productNotifierProvider).products.length;
-  //       expect(afterPage1, 3);
-
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       final afterPage2 = container.read(productNotifierProvider).products.length;
-  //       expect(afterPage2, greaterThan(afterPage1));
-  //       expect(container.read(productNotifierProvider).cursor, afterPage2);
-  //     });
-
-  //     test('pages do not overlap', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 3);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       final page1Ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toSet();
-
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       final allIds = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       final page2Ids = allIds.skip(3).toSet();
-
-  //       // No product appears in both pages
-  //       expect(page1Ids.intersection(page2Ids), isEmpty);
-  //     });
-
-  //     test('all pages combined cover all seed rows', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 3);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       final allIds = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(allIds, containsAll(_testIds));
-  //     });
-
-  //     test('skips when hasMore is false', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       // limit=100 → all 5 rows return → hasMore false
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 100);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-
-  //       final countBefore =
-  //           container.read(productNotifierProvider).products.length;
-
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       expect(
-  //           container.read(productNotifierProvider).products.length, countBefore);
-  //     });
-
-  //     test('skips when already loadingMore', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(status: ProductStatus.loadingMore);
-
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       // State must remain loadingMore — no transition happened
-  //       expect(container.read(productNotifierProvider).status,
-  //           ProductStatus.loadingMore);
-  //     });
-  //   });
-
-  //   // ─── search ─────────────────────────────────────────────────────────────────
-
-  //   group('search', () {
-  //     test('ilike search matches title substring', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Worker');
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, [_id1]);
-  //     });
-
-  //     test('search is case-insensitive', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('worker');
-
-  //       expect(container.read(productNotifierProvider).products.length, 1);
-  //       expect(
-  //           container.read(productNotifierProvider).products.first.id, _id1);
-  //     });
-
-  //     test('partial match works', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Scarf');
-
-  //       expect(container.read(productNotifierProvider).products.any((p) => p.id == _id5), isTrue);
-  //     });
-
-  //     test('no match returns empty products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .search('xyznotexist');
-
-  //       expect(container.read(productNotifierProvider).products, isEmpty);
-  //     });
-
-  //     test('trims whitespace from keyword', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .search('  Worker  ');
-
-  //       expect(container.read(productNotifierProvider).query.search, 'Worker');
-  //       expect(container.read(productNotifierProvider).products.first.id, _id1);
-  //     });
-
-  //     test('empty string clears search and reloads all', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Worker');
-  //       await container.read(productNotifierProvider.notifier).search('');
-
-  //       expect(container.read(productNotifierProvider).query.search, isNull);
-  //       expect(container.read(productNotifierProvider).products.map((p) => p.id),
-  //           containsAll(_testIds));
-  //     });
-
-  //     test('resets cursor to 0 on new search', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       container.read(productNotifierProvider.notifier).state = container
-  //           .read(productNotifierProvider)
-  //           .copyWith(limit: 3);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .loadProducts(refresh: true);
-  //       await container.read(productNotifierProvider.notifier).loadMore();
-
-  //       // cursor is now > 3
-  //       await container.read(productNotifierProvider.notifier).search('Boots');
-
-  //       expect(container.read(productNotifierProvider).cursor,
-  //           container.read(productNotifierProvider).products.length);
-  //     });
-  //   });
-
-  //   // ─── clearSearch ────────────────────────────────────────────────────────────
-
-  //   group('clearSearch', () {
-  //     test('nullifies search and reloads all products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Worker');
-  //       await container.read(productNotifierProvider.notifier).clearSearch();
-
-  //       expect(container.read(productNotifierProvider).query.search, isNull);
-  //       expect(container.read(productNotifierProvider).products.map((p) => p.id),
-  //           containsAll(_testIds));
-  //     });
-  //   });
-
-  //   // ─── setFilter ──────────────────────────────────────────────────────────────
-
-  //   group('setFilter', () {
-  //     test('minPrice filters out cheaper products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(minPrice: 70.0);
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id1, _id2]));
-  //       expect(ids, isNot(contains(_id3)));
-  //       expect(ids, isNot(contains(_id5)));
-  //     });
-
-  //     test('maxPrice filters out expensive products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(maxPrice: 40.0);
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id3, _id5]));
-  //       expect(ids, isNot(contains(_id2)));
-  //     });
-
-  //     test('minPrice + maxPrice form a price range', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setFilter(
-  //             minPrice: 30.0,
-  //             maxPrice: 60.0,
-  //           );
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id3, _id4]));
-  //       expect(ids, isNot(contains(_id1)));
-  //       expect(ids, isNot(contains(_id2)));
-  //     });
-
-  //     test('minRating filters out low-rated products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(minRating: 4.5);
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id1, _id4]));
-  //       expect(ids, isNot(contains(_id5)));
-  //       expect(ids, isNot(contains(_id3)));
-  //     });
-
-  //     test('onlyAvailable excludes out-of-stock products', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(onlyAvailable: true);
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, isNot(contains(_id3))); // stock = 0
-  //       expect(ids, containsAll([_id1, _id2, _id4, _id5]));
-  //     });
-
-  //     test('categoryId returns only matching category', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(categoryId: 'accessories');
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id3, _id5]));
-  //       expect(ids, isNot(contains(_id1)));
-  //       expect(ids, isNot(contains(_id4)));
-  //     });
-
-  //     test('onlyFeatured returns products with rating >= 4.5', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(onlyFeatured: true);
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       expect(ids, containsAll([_id1, _id4]));
-  //       expect(ids, isNot(contains(_id5)));
-  //     });
-
-  //     test('clearMinPrice flag nullifies minPrice and reloads', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(minPrice: 70.0);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(clearMinPrice: true);
-
-  //       expect(container.read(productNotifierProvider).query.minPrice, isNull);
-  //       expect(container.read(productNotifierProvider).products.map((p) => p.id),
-  //           containsAll(_testIds));
-  //     });
-
-  //     test('replaces products on filter change', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).loadProducts();
-  //       final countBefore =
-  //           container.read(productNotifierProvider).products.length;
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(minPrice: 100.0);
-
-  //       final countAfter =
-  //           container.read(productNotifierProvider).products.length;
-
-  //       expect(countAfter, lessThan(countBefore));
-  //     });
-  //   });
-
-  //   // ─── clearFilters ───────────────────────────────────────────────────────────
-
-  //   group('clearFilters', () {
-  //     test('wipes all filters but preserves search', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Boots');
-  //       await container.read(productNotifierProvider.notifier).setFilter(
-  //             minPrice: 10.0,
-  //             maxPrice: 200.0,
-  //             minRating: 4.0,
-  //           );
-
-  //       await container.read(productNotifierProvider.notifier).clearFilters();
-
-  //       final q = container.read(productNotifierProvider).query;
-  //       expect(q.search, 'Boots');
-  //       expect(q.minPrice, isNull);
-  //       expect(q.maxPrice, isNull);
-  //       expect(q.minRating, isNull);
-  //       expect(q.categoryId, isNull);
-  //       expect(q.onlyAvailable, isNull);
-  //       expect(q.onlyFeatured, isNull);
-  //     });
-
-  //     test('after clearFilters all seed products are visible again', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(minPrice: 500.0);
-
-  //       expect(container.read(productNotifierProvider).products, isEmpty);
-
-  //       await container.read(productNotifierProvider.notifier).clearFilters();
-
-  //       expect(
-  //           container.read(productNotifierProvider).products.map((p) => p.id),
-  //           containsAll(_testIds));
-  //     });
-  //   });
-
-  //   // ─── setSort ────────────────────────────────────────────────────────────────
-
-  //   group('setSort', () {
-  //     test('price ascending returns products sorted by price low→high', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setSort(
-  //             sortBy: ProductSortField.price,
-  //             order: SortOrder.asc,
-  //           );
-
-  //       final prices = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.price)
-  //           .toList();
-
-  //       expect(prices, orderedEquals(prices.toList()..sort()));
-  //     });
-
-  //     test('price descending returns products sorted by price high→low', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setSort(
-  //             sortBy: ProductSortField.price,
-  //             order: SortOrder.desc,
-  //           );
-
-  //       final prices = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.price)
-  //           .toList();
-
-  //       expect(prices,
-  //           orderedEquals(prices.toList()..sort((a, b) => b.compareTo(a))));
-  //     });
-
-  //     test('rating ascending returns products sorted by rating low→high',
-  //         () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setSort(
-  //             sortBy: ProductSortField.rating,
-  //             order: SortOrder.asc,
-  //           );
-
-  //       final ratings = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.rating)
-  //           .toList();
-
-  //       expect(ratings, orderedEquals(ratings.toList()..sort()));
-  //     });
-
-  //     test('newest sort returns products ordered by createdAt descending',
-  //         () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setSort(
-  //             sortBy: ProductSortField.newest,
-  //           );
-
-  //       final dates = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.createdAt)
-  //           .toList();
-
-  //       expect(
-  //           dates,
-  //           orderedEquals(
-  //               dates.toList()..sort((a, b) => b.compareTo(a))));
-  //     });
-
-  //     test('default (no sort) orders by createdAt descending', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).loadProducts();
-
-  //       final dates = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.createdAt)
-  //           .toList();
-
-  //       expect(
-  //           dates,
-  //           orderedEquals(
-  //               dates.toList()..sort((a, b) => b.compareTo(a))));
-  //     });
-  //   });
-
-  //   // ─── clearSort ──────────────────────────────────────────────────────────────
-
-  //   group('clearSort', () {
-  //     test('nullifies sortBy and falls back to default order', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setSort(
-  //             sortBy: ProductSortField.price,
-  //             order: SortOrder.asc,
-  //           );
-
-  //       await container.read(productNotifierProvider.notifier).clearSort();
-
-  //       expect(container.read(productNotifierProvider).query.sortBy, isNull);
-
-  //       // Back to default created_at desc
-  //       final dates = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.createdAt)
-  //           .toList();
-
-  //       expect(
-  //           dates,
-  //           orderedEquals(
-  //               dates.toList()..sort((a, b) => b.compareTo(a))));
-  //     });
-  //   });
-
-  //   // ─── combined filters ───────────────────────────────────────────────────────
-
-  //   group('combined filters', () {
-  //     test('search + category narrows results correctly', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).search('Boots');
-  //       await container
-  //           .read(productNotifierProvider.notifier)
-  //           .setFilter(categoryId: 'footwear');
-
-  //       expect(container.read(productNotifierProvider).products.length, 1);
-  //       expect(
-  //           container.read(productNotifierProvider).products.first.id, _id1);
-  //     });
-
-  //     test('minPrice + onlyAvailable excludes out-of-stock cheap items',
-  //         () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setFilter(
-  //             minPrice: 30.0,
-  //             onlyAvailable: true,
-  //           );
-
-  //       final ids = container
-  //           .read(productNotifierProvider)
-  //           .products
-  //           .map((p) => p.id)
-  //           .toList();
-
-  //       // Wallet (35, stock=0) excluded
-  //       expect(ids, isNot(contains(_id3)));
-  //       expect(ids, containsAll([_id1, _id2]));
-  //     });
-
-  //     test('minRating + category returns correct subset', () async {
-  //       final container = _makeContainer();
-  //       addTearDown(container.dispose);
-
-  //       await container.read(productNotifierProvider.notifier).setFilter(
-  //             categoryId: 'footwear',
-  //             minRating: 4.5,
-  //           );
-
-  //       // Boots (4.8) passes; Shoes (4.2) does not
-  //       expect(container.read(productNotifierProvider).products.length, 1);
-  //       expect(
-  //           container.read(productNotifierProvider).products.first.id, _id1);
-  //     });
-  //   });
-  // }
+}
+
+// ─── Slow mock for race condition test ────────────────────────────────────────
+
+class _SlowMockRepository implements ProductRepository {
+  List<ProductModel> stubbedProducts = [];
+  List<ProductModel> stubbedFeatured = [];
+  int callCount = 0;
+
+  @override
+  Future<List<ProductModel>> getProducts({
+    int limit = 20,
+    String? cursor,
+    int offset = 0,
+    ProductQuery? query,
+  }) async {
+    callCount++;
+    // Simulate network delay
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    return stubbedProducts;
+  }
+
+  @override
+  Future<List<ProductModel>> getFeaturedProducts() async {
+    return stubbedFeatured;
+  }
 }

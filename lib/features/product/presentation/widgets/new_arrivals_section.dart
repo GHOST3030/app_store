@@ -11,7 +11,7 @@ class NewArrivalsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final r = HomeResponsive.of(context);
-    final featured = ref.watch(productNotifierProvider).featuredProducts;
+    final featured = ref.watch(featuredProductsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -23,9 +23,10 @@ class DummyJsonProductRepository implements ProductRepository {
 
   @override
   Future<List<ProductModel>> getProducts({
-    ProductQuery? query,
-    int cursor = 0,
     int limit = 20,
+    String? cursor,
+    int offset = 0,
+    ProductQuery? query,
   }) async {
     final uri = _buildUri(query: query, skip: cursor, limit: limit);
     final response = await _http.get(uri);
@@ -38,7 +39,7 @@ class DummyJsonProductRepository implements ProductRepository {
 
     final body = json.decode(response.body) as Map<String, dynamic>;
     final products = (body['products'] as List)
-        .map((e) => ProductModel.fromDummyJson(e as Map<String, dynamic>))
+        .map((e) => ProductModel.fromSupabase(e as Map<String, dynamic>))
         .toList();
 
     return _applyClientSideFilters(products, query);
@@ -48,7 +49,7 @@ class DummyJsonProductRepository implements ProductRepository {
 
   Uri _buildUri({
     required ProductQuery? query,
-    required int skip,
+    required String? skip,
     required int limit,
   }) {
     // DummyJSON supports: /products, /products/search?q=, /products/category/:id
@@ -56,7 +57,7 @@ class DummyJsonProductRepository implements ProductRepository {
       return Uri.parse('$_baseUrl/products/search').replace(
         queryParameters: {
           'q': query.search!,
-          'skip': skip.toString(),
+          'skip': skip,
           'limit': limit.toString(),
           ..._sortParams(query),
         },
@@ -95,7 +96,7 @@ class DummyJsonProductRepository implements ProductRepository {
       case ProductSortField.rating:
         sortByParam = 'rating';
         break;
-      case ProductSortField.newest:
+      case ProductSortField.createdAt:
         // DummyJSON doesn't have createdAt — fallback to id desc
         return {'sortBy': 'id', 'order': 'desc'};
     }
@@ -122,5 +123,11 @@ class DummyJsonProductRepository implements ProductRepository {
       if (query.onlyFeatured == true && !p.isFeatured) return false;
       return true;
     }).toList();
+  }
+  
+  @override
+  Future<List<ProductModel>> getFeaturedProducts() {
+    // TODO: implement getFeaturedProducts
+    throw UnimplementedError();
   }
 }

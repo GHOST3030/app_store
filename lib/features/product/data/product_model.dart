@@ -27,40 +27,54 @@ class ProductModel {
   bool get isAvailable => stock > 0;
   double get effectivePrice => discountPrice ?? price;
 
-  /// Used by SupabaseProductRepository
+  /// Defensive factory — never crashes on malformed JSON.
+  ///
+  /// Throws [FormatException] only if `id` is missing (the one truly
+  /// required field). Everything else falls back to safe defaults.
   factory ProductModel.fromSupabase(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    if (rawId == null) {
+      throw FormatException(
+        'ProductModel.fromSupabase: missing required "id" field',
+        json,
+      );
+    }
+
     return ProductModel(
-      id: json['id'].toString(),
-      title: json['title'] as String,
-      description: json['description'] as String,
-      price: (json['price'] as num).toDouble(),
-      discountPrice: json['discount_price'] != null
-          ? (json['discount_price'] as num).toDouble()
-          : null,
-      images: List<String>.from(json['images'] as List? ?? []),
-      categoryId: (json['category_id'] ?? '').toString(),
-      stock: (json['stock'] as num).toInt(),
-      rating: (json['rating'] as num).toDouble(),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      id: rawId.toString(),
+      title: (json['title'] as String?) ?? '',
+      description: (json['description'] as String?) ?? '',
+      price: _toDouble(json['price']),
+      discountPrice:
+          json['discount_price'] != null ? _toDouble(json['discount_price']) : null,
+      images: _toStringList(json['images']),
+      categoryId: (json['category_id'] as String?) ?? '',
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      rating: _toDouble(json['rating']),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
-  /// Used by DummyJsonProductRepository
-  factory ProductModel.fromDummyJson(Map<String, dynamic> json) {
-    final price = (json['price'] as num).toDouble();
-    final discountPct = (json['discountPercentage'] as num?)?.toDouble() ?? 0;
-    return ProductModel(
-      id: json['id'].toString(),
-      title: json['title'] as String,
-      description: json['description'] as String,
-      price: price,
-      discountPrice:
-          discountPct > 0 ? price * (1 - discountPct / 100) : null,
-      images: List<String>.from(json['images'] as List? ?? []),
-      categoryId: (json['category'] ?? '').toString(),
-      stock: (json['stock'] as num).toInt(),
-      rating: (json['rating'] as num).toDouble(),
-      createdAt: DateTime.now(),
-    );
+  // ─── Private helpers ────────────────────────────────────────────────────────
+
+  static double _toDouble(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
+
+  static List<String> _toStringList(dynamic v) {
+    if (v is List) return v.map((e) => e.toString()).toList();
+    return const [];
   }
+
+  @override
+  bool operator ==(Object other) => 
+      identical(this, other) ||
+      other is ProductModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'ProductModel(id: $id, title: $title)';
 }

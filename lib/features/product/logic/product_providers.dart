@@ -1,51 +1,61 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:new_auth/core/network/supabase_client_provider.dart';
 
+import '../data/product_model.dart';
+import '../data/product_query.dart';
 import '../data/product_repository.dart';
 import '../data/supabase_product_repository.dart';
-// import '../data/dummyjson_product_repository.dart'; // ← swap here when needed
-
 import 'product_notifier.dart';
 import 'product_state.dart';
 
-// ─── Repository provider ──────────────────────────────────────────────────────
-//
-// To switch data sources, change the implementation returned here.
-// Nothing in the logic or UI layers needs to change.
-
+// ─── Repository ───────────────────────────────────────────────────────────────
+/// Injectable — override in tests with ProviderScope.
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
- 
-  return SupabaseProductRepository(ref.watch(supabaseClientProvider)); // ← default to Supabase
-  // return DummyJsonProductRepository(); // ← uncomment to use DummyJSON
+  return SupabaseProductRepository(ref.watch(supabaseClientProvider));
 });
 
-// ─── State notifier ───────────────────────────────────────────────────────────
-
+// ─── Main AsyncNotifier ───────────────────────────────────────────────────────
 final productNotifierProvider =
-    StateNotifierProvider<ProductNotifier, ProductState>((ref) {
-  final repository = ref.watch(productRepositoryProvider);
-  return ProductNotifier(repository);
+    AsyncNotifierProvider<ProductNotifier, ProductState>(ProductNotifier.new);
+
+// ─── Typed convenience selectors ──────────────────────────────────────────────
+
+final productListProvider = Provider<List<ProductModel>>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.products))
+      ?? const [];
 });
 
-// ─── Convenience read-only providers ─────────────────────────────────────────
-
-final productListProvider = Provider<List<dynamic>>((ref) {
-  return ref.watch(productNotifierProvider).products;
+final featuredProductsProvider = Provider<List<ProductModel>>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.featuredProducts))
+      ?? const [];
 });
 
-final featuredProductsProvider = Provider<List<dynamic>>((ref) {
-  return ref.watch(productNotifierProvider).featuredProducts;
+/// FIX: uses .select() for granular rebuilds.
+final productIsLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(productNotifierProvider.select((v) => v.isLoading));
 });
 
-final productStatusProvider = Provider<ProductStatus>((ref) {
-  return ref.watch(productNotifierProvider).status;
+final productIsLoadingMoreProvider = Provider<bool>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.isLoadingMore))
+      ?? false;
 });
 
-final productQueryProvider = Provider((ref) {
-  return ref.watch(productNotifierProvider).query;
+final productHasMoreProvider = Provider<bool>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.hasMore))
+      ?? false;
 });
 
-final hasMoreProvider = Provider<bool>((ref) {
-  return ref.watch(productNotifierProvider).hasMore;
+final productQueryProvider = Provider<ProductQuery>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.query))
+      ?? const ProductQuery();
+});
+
+final productFailureProvider = Provider<ProductFailure?>((ref) {
+  return ref
+      .watch(productNotifierProvider.select((v) => v.value?.failure));
 });
