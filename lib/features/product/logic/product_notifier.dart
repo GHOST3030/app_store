@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../data/product_query.dart';
 import 'product_providers.dart';
 import 'product_state.dart';

@@ -2,25 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../logic/deal_timer_notifier.dart';
 import '../../logic/product_providers.dart';
-import '../../data/product_model.dart';
 import 'export_allthings.dart';
 import 'product_card.dart';
 
 class DealOfTheDaySection extends ConsumerWidget {
   const DealOfTheDaySection({super.key});
 
-  String _pad(int n) => n.toString().padLeft(2, '0');
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final r = HomeResponsive.of(context);
-    final left = ref.watch(dealTimerProvider);
-    final products = ref.watch(productListProvider);
-    final isLoading = ref.watch(productIsLoadingProvider);
-
-    final hh = _pad(left.inHours);
-    final mm = _pad(left.inMinutes.remainder(60));
-    final ss = _pad(left.inSeconds.remainder(60));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,13 +47,7 @@ class DealOfTheDaySection extends ConsumerWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      Text(
-                        '${hh}h  ${mm}m  ${ss}s remaining',
-                        style: TextStyle(
-                          color: HomeColors.white.withValues(alpha: 0.85),
-                          fontSize: r.captionFontSize,
-                        ),
-                      ),
+                      CountdownText(r: r),
                     ],
                   ),
                 ),
@@ -98,33 +82,56 @@ class DealOfTheDaySection extends ConsumerWidget {
         // ── Product list ────────────────────────────────────────────────────
         SizedBox(
           height: r.dealListHeight,
-          child: _ProductList(products: products, isLoading: isLoading, r: r),
+          child: ProductlistView(r: r),
         ),
       ],
     );
   }
 }
 
-class _ProductList extends StatelessWidget {
-  const _ProductList({
-    required this.products,
-    required this.isLoading,
-    required this.r,
-  });
-
-  final List<ProductModel> products;
-  final bool isLoading;
+class ProductlistView extends ConsumerStatefulWidget {
+  const ProductlistView({super.key, required this.r});
   final HomeResponsive r;
 
   @override
+  ConsumerState<ProductlistView> createState() => _ProductList(r: r);
+}
+
+// ignore: must_be_immutable
+class _ProductList extends ConsumerState<ProductlistView> {
+  final HomeResponsive r;
+  final ScrollController scrollController = ScrollController();
+
+  _ProductList({required this.r});
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(_onscroll);
+    // Fetch products when the widget is first built
+  }
+
+  void _onscroll() {
+    final notifier = ref.read(productNotifierProvider.notifier);
+    if (scrollController.position.pixels >=
+        scrollController.position.maxScrollExtent - 200) {
+      notifier.loadMore();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final products = ref.watch(productListProvider);
+    final isLoading = ref.watch(productIsLoadingProvider);
     if (isLoading) {
       return ListView.separated(
+        controller: scrollController,
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: r.hPad),
         itemCount: 4,
+        physics: const BouncingScrollPhysics(),
         separatorBuilder: (_, _2) => SizedBox(width: r.gridSpacing),
         itemBuilder: (_, _2) => _ShimmerCard(r: r),
+        cacheExtent: r.cardWidth * 3,
       );
     }
 
@@ -138,11 +145,28 @@ class _ProductList extends StatelessWidget {
     }
 
     return ListView.separated(
+      controller: scrollController,
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: r.hPad),
-      itemCount: products.length,
+      itemCount: products.length + (isLoading ? 1 : 0),
+      physics: const BouncingScrollPhysics(),
+      cacheExtent: r.cardWidth * 3,
       separatorBuilder: (_, _2) => SizedBox(width: r.gridSpacing),
-      itemBuilder: (_, i) => ProductCard(product: products[i]),
+      itemBuilder: (_, i) {
+
+        if(i == products.length) {
+          return const SizedBox(
+            width: 60,
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: HomeColors.primary,
+              ),
+            ),
+          );
+        }
+        return ProductCard(key: ValueKey(products[i].id), product: products[i]);
+      },
     );
   }
 }
@@ -238,3 +262,29 @@ class _Line extends StatelessWidget {
     );
   }
 }
+
+class CountdownText extends ConsumerWidget {
+  const CountdownText({super.key, required this.r});
+
+  final HomeResponsive r;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = ref.watch(dealTimerTextProvider);
+    return Text(
+      text,
+      style: TextStyle(
+        color: HomeColors.white.withValues(alpha: 0.85),
+        fontSize: r.captionFontSize,
+      ),
+    );
+  }
+}
+
+final dealTimerTextProvider = Provider<String>((ref) {
+  final left = ref.watch(dealTimerProvider);
+
+  String pad(int n) => n.toString().padLeft(2, '0');
+
+  return '${pad(left.inHours)}h ${pad(left.inMinutes % 60)}m ${pad(left.inSeconds % 60)}s remaining';
+});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/conistent/app_strings.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
 
@@ -50,7 +51,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               const SizedBox(height: 40),
               // Big Bold Header
               const Text(
-                'Forgot\npassword?',
+                Appstrings.forgetpassword,
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -70,7 +71,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   controller: _emailController,
                   enabled: !isLoading,
                   decoration: const InputDecoration(
-                    hintText: 'Enter your email address',
+                    hintText: Appstrings.enteryouremailaddress,
                     hintStyle: TextStyle(color: Colors.grey),
                     prefixIcon: Icon(
                       Icons.email_outlined,
@@ -90,7 +91,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   children: [
                     TextSpan(
                       text:
-                          'We will send you a message to set or reset your new password',
+                          Appstrings.wewillsendyoumessagetosetorresetyourpassword,
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
@@ -112,14 +113,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 .resetPassword(
                                   email,
                                   redirectTo:
-                                      'io.supabase.flutter://reset-callback',
+                                      Appstrings.supabaseuriressetpassword,
                                 );
                             if (context.mounted) {
-                              _showMessage('Reset instructions sent!');
+                              _showMessage(Appstrings.resetinstructionssent);
                             }
                           } else {
                             _showMessage(
-                              'Please enter your email',
+                              Appstrings.pleaseenteryouremaila,
                               isError: true,
                             );
                           }
@@ -137,7 +138,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          'Submit',
+                          Appstrings.submit,
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,

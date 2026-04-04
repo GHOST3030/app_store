@@ -2,33 +2,31 @@ class ProductModel {
   final String id;
   final String title;
   final String description;
-  ProductModel({
+  final double price;
+  final double? discountPrice;
+  final List<String> images;
+  final String categoryId;
+  final int stock;
+  final double rating;
+  final DateTime createdAt;
+
+  const ProductModel({
     required this.id,
     required this.title,
     required this.description,
+    required this.price, 
+    this.discountPrice,
+    required this.images,
+    required this.categoryId,
+    required this.stock,
+    required this.rating,
+    required this.createdAt,
   });
 
+  bool get isFeatured => rating >= 4.5;
+  bool get isAvailable => stock > 0;
+  double get effectivePrice => discountPrice ?? price;
 
-<<<<<<< HEAD
-
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-    );
-  }
-  // toJson method to convert ProductModel instance to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-    };
-  }
-  
-}
-=======
   /// Defensive factory — never crashes on malformed JSON.
   ///
   /// Throws [FormatException] only if `id` is missing (the one truly
@@ -47,13 +45,15 @@ class ProductModel {
       title: (json['title'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
       price: _toDouble(json['price']),
-      discountPrice:
-          json['discount_price'] != null ? _toDouble(json['discount_price']) : null,
+      discountPrice: json['discount_price'] != null
+          ? _toDouble(json['discount_price'])
+          : null,
       images: _toStringList(json['images']),
       categoryId: (json['category_id'] as String?) ?? '',
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       rating: _toDouble(json['rating']),
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -68,7 +68,7 @@ class ProductModel {
   }
 
   @override
-  bool operator ==(Object other) => 
+  bool operator ==(Object other) =>
       identical(this, other) ||
       other is ProductModel &&
           runtimeType == other.runtimeType &&
@@ -80,4 +80,3 @@ class ProductModel {
   @override
   String toString() => 'ProductModel(id: $id, title: $title)';
 }
->>>>>>> b9765f071785801d1be213a2cb841965271499ee
