@@ -14,7 +14,7 @@ class ProductModel {
     required this.id,
     required this.title,
     required this.description,
-    required this.price,
+    required this.price, 
     this.discountPrice,
     required this.images,
     required this.categoryId,
@@ -45,13 +45,15 @@ class ProductModel {
       title: (json['title'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
       price: _toDouble(json['price']),
-      discountPrice:
-          json['discount_price'] != null ? _toDouble(json['discount_price']) : null,
+      discountPrice: json['discount_price'] != null
+          ? _toDouble(json['discount_price'])
+          : null,
       images: _toStringList(json['images']),
       categoryId: (json['category_id'] as String?) ?? '',
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       rating: _toDouble(json['rating']),
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -66,7 +68,7 @@ class ProductModel {
   }
 
   @override
-  bool operator ==(Object other) => 
+  bool operator ==(Object other) =>
       identical(this, other) ||
       other is ProductModel &&
           runtimeType == other.runtimeType &&
