@@ -12,5 +12,5 @@ class ProductNotifire extends AsyncNotifier<List<ProductModel>>{
   FutureOr<List<ProductModel>> build() {
    
     return repositery.getProducts();
-  }
+  }g
 }
