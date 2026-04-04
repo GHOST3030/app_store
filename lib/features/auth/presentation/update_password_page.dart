@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/conistent/app_strings.dart';
 import '../logic/providers_auth.dart';
 
 class UpdatePasswordPage extends ConsumerStatefulWidget {
@@ -31,7 +32,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   Future<void> _updatePassword() async {
     final password = _passwordController.text.trim();
     if (password.isEmpty || password.length < 6) {
-      _showMessage('Password must be at least 6 characters long', isError: true);
+      _showMessage(Appstrings.passwordmustbeatleast6, isError: true);
       return;
     }
 
@@ -44,7 +45,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
       if (authState.hasError) {
         _showMessage(authState.error.toString(), isError: true);
       } else {
-        _showMessage('Password updated successfully!');
+        _showMessage(Appstrings.passwordsuccessfully);
         
         // Log the user out so they are forced to log in with the new password
         await ref.read(authControllerProvider.notifier).logout();
@@ -59,7 +60,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Update Password')),
+      appBar: AppBar(title: const Text(Appstrings.updatepassword)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -68,20 +69,20 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Set New Password',
+               Appstrings.setNewPassword,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               const Text(
-                'Please enter your new password below.',
+                Appstrings.enteryournewpaasword,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: 'New Password',
+                  labelText: Appstrings.newpaasword,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
@@ -92,7 +93,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
                 onPressed: _updatePassword,
                 child: const Padding(
                   padding: EdgeInsets.all(12.0),
-                  child: Text('Update Password', style: TextStyle(fontSize: 16)),
+                  child: Text(Appstrings.updatepassword, style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

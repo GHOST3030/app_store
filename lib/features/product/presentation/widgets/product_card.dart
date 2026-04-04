@@ -5,6 +5,7 @@ import 'export_allthings.dart';
 class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
+  
     required this.product,
     this.width,
     this.onTap,
@@ -53,6 +54,7 @@ class ProductCard extends StatelessWidget {
                   child: product.images.isNotEmpty
                       ? Image.network(
                           product.images.first,
+                          cacheWidth: 300,
                           width: double.infinity,
                           height: r.cardImageHeight,
                           fit: BoxFit.cover,
