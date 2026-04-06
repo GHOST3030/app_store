@@ -1,3 +1,5 @@
+
+
 class ProductModel {
   final String id;
   final String title;
@@ -48,8 +50,8 @@ class ProductModel {
       discountPrice: json['discount_price'] != null
           ? _toDouble(json['discount_price'])
           : null,
-      images: _toStringList(json['images']),
-      categoryId: (json['category_id'] as String?) ?? '',
+      images: _toStringList(json['image_url']),
+      categoryId: (json['category_id'].toString() as String?) ?? '',
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       rating: _toDouble(json['rating']),
       createdAt:
@@ -63,6 +65,7 @@ class ProductModel {
   static double _toDouble(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
 
   static List<String> _toStringList(dynamic v) {
+
     if (v is List) return v.map((e) => e.toString()).toList();
     return const [];
   }

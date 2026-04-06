@@ -28,14 +28,14 @@ class TrendingProductsSection extends ConsumerWidget {
               vertical: r.isPhone ? 12 : 14,
             ),
             decoration: BoxDecoration(
-              gradient: HomeColors.trendingGradient,
+              gradient: AppColors.trendingGradient,
               borderRadius: BorderRadius.circular(r.borderRadius),
             ),
             child: Row(
               children: [
                 const Icon(
                   Icons.trending_up_rounded,
-                  color: HomeColors.white,
+                  color: AppColors.white,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
@@ -44,17 +44,17 @@ class TrendingProductsSection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trending Products',
+                        AppStrings.trendingProducts,
                         style: TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: r.bodyFontSize,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
-                        'Last Date 29/02/22',
+                        AppStrings.lastDate,
                         style: TextStyle(
-                          color: HomeColors.white.withValues(alpha: 0.85),
+                          color: AppColors.white.withValues(alpha: 0.85),
                           fontSize: r.captionFontSize,
                         ),
                       ),
@@ -66,9 +66,9 @@ class TrendingProductsSection extends ConsumerWidget {
                   child: Row(
                     children: [
                       Text(
-                        'View all',
+                        AppStrings.viewAll,
                         style: TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: r.captionFontSize,
                           fontWeight: FontWeight.w600,
                         ),
@@ -76,7 +76,7 @@ class TrendingProductsSection extends ConsumerWidget {
                       const SizedBox(width: 2),
                       const Icon(
                         Icons.arrow_forward_rounded,
-                        color: HomeColors.white,
+                        color: AppColors.white,
                         size: 14,
                       ),
                     ],
@@ -127,8 +127,8 @@ class Buildcontent extends StatelessWidget {
         height: 80,
         child: Center(
           child: Text(
-            'No products',
-            style: TextStyle(color: HomeColors.textMid),
+            AppStrings.noProducts,
+            style: TextStyle(color: AppColors.textMid),
           ),
         ),
       );
@@ -165,7 +165,7 @@ class Buildcontent extends StatelessWidget {
             child: isLoadingMore
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: HomeColors.primary,
+                      color: AppColors.primary,
                       strokeWidth: 2,
                     ),
                   )
@@ -174,7 +174,7 @@ class Buildcontent extends StatelessWidget {
                     height: 46,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: HomeColors.primary),
+                        side: const BorderSide(color: AppColors.primary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -182,9 +182,9 @@ class Buildcontent extends StatelessWidget {
                       onPressed: () =>
                           ref.read(productNotifierProvider.notifier).loadMore(),
                       child: const Text(
-                        'Load More',
+                        AppStrings.loadMore,
                         style: TextStyle(
-                          color: HomeColors.primary,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -215,10 +215,10 @@ class BuildShimmerGrid extends StatelessWidget {
         children: List.generate(
           r.productGridCols * 2,
           (_) => Container(
-            width: 100, // placeholder — gets sized by parent constraints
+            width: 100,
             height: 120,
             decoration: BoxDecoration(
-              color: HomeColors.bgGrey,
+              color: AppColors.bgGrey,
               borderRadius: BorderRadius.circular(r.borderRadius),
             ),
           ),

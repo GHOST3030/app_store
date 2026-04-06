@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/conistent/app_strings.dart';
+import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/theme/app_colors.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
 
@@ -24,7 +25,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? AppColors.error : AppColors.success,
       ),
     );
   }
@@ -41,7 +42,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -51,11 +52,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               const SizedBox(height: 40),
               // Big Bold Header
               const Text(
-                Appstrings.forgetpassword,
+                AppStrings.forgetPassword,
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppColors.black,
                   height: 1.1,
                 ),
               ),
@@ -63,19 +64,19 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               // Styled Text Field
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F3F3),
+                  color: AppColors.inputFill,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: AppColors.textLight),
                 ),
                 child: TextField(
                   controller: _emailController,
                   enabled: !isLoading,
                   decoration: const InputDecoration(
-                    hintText: Appstrings.enteryouremailaddress,
-                    hintStyle: TextStyle(color: Colors.grey),
+                    hintText: AppStrings.enterYourEmailAddress,
+                    hintStyle: TextStyle(color: AppColors.textMid),
                     prefixIcon: Icon(
                       Icons.email_outlined,
-                      color: Colors.black54,
+                      color: AppColors.textDark,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(vertical: 20),
@@ -87,18 +88,17 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               RichText(
                 text: const TextSpan(
                   text: '* ',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
+                  style: TextStyle(color: AppColors.error, fontSize: 14),
                   children: [
                     TextSpan(
-                      text:
-                          Appstrings.wewillsendyoumessagetosetorresetyourpassword,
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      text: AppStrings.willSendMessageToSetPassword,
+                      style: TextStyle(color: AppColors.textMid, fontSize: 14),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 40),
-              // Pinkish-Red Submit Button
+              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 60,
@@ -112,33 +112,30 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 .read(authControllerProvider.notifier)
                                 .resetPassword(
                                   email,
-                                  redirectTo:
-                                      Appstrings.supabaseuriressetpassword,
+                                  redirectTo: AppStrings.supabaseUriResetPassword,
                                 );
                             if (context.mounted) {
-                              _showMessage(Appstrings.resetinstructionssent);
+                              _showMessage(AppStrings.resetInstructionsSent);
                             }
                           } else {
                             _showMessage(
-                              Appstrings.pleaseenteryouremaila,
+                              AppStrings.pleaseEnterYourEmail,
                               isError: true,
                             );
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(
-                      0xFFFF3B5C,
-                    ), // The signature red/pink
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.authButton,
+                    foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
                   child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator(color: AppColors.white)
                       : const Text(
-                          Appstrings.submit,
+                          AppStrings.submit,
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,

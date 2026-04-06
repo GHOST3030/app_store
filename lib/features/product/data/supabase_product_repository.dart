@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'product_model.dart';
@@ -11,19 +13,23 @@ class SupabaseProductRepository implements ProductRepository {
 
   // ─── Public API ──────────────────────────────────────────────────────────────
 
-  @override
+@override
   Future<List<ProductModel>> getProducts({
     int limit = 20,
-    String? cursor,
-    int offset = 0,
+    String? cursor, // هذا سيكون الـ ID لآخر عنصر
     ProductQuery? query,
   }) async {
-    // 1. Start builder
+    // 1. تحديد عمود الترتيب
+    final sortColumn = _columnFor(query?.sortBy);
+    final bool isAscending = query?.sortOrder == SortOrder.asc;
+
     var builder = _client.from('products').select();
 
-    // 2. Apply filters (chain only, never reassign to a new select)
+    // 2. تطبيق الفلاتر (نفس منطقك الجميل)
     if (query != null) {
-      if (query.search != null && query.search!.isNotEmpty) {
+       // ... (كل الـ filters اللي كتبتها ممتازة، اتركها كما هي)
+  
+   if (query.search != null && query.search!.isNotEmpty) {
         // Escape Postgres wildcards in user input
         final safeSearch = query.search!
             .replaceAll('%', r'\%')
@@ -48,32 +54,33 @@ class SupabaseProductRepository implements ProductRepository {
       if (query.onlyFeatured == true) {
         builder = builder.gte('rating', 4.5);
       }
+  
     }
 
-    // 3. Pagination — cursor (createdAt DESC) vs offset (any other sort)
+    // 3. احترافية التعامل مع الـ Cursor
+    // إذا كنت تستخدم الترتيب التصاعدي، اطلب العناصر التي "أكبر من" المؤشر
+    // إذا كنت تستخدم الترتيب التنازلي، اطلب العناصر التي "أصغر من" المؤشر
     if (cursor != null) {
-      builder = builder.lt('created_at', cursor);
+      if (isAscending) {
+        builder = builder.gt('id', cursor); // Greater Than للأقدم إلى الأحدث
+      } else {
+        builder = builder.lt('id', cursor); // Less Than للأحدث إلى الأقدم
+      }
     }
 
-    // 4. Apply sort + limit
-    final sortColumn = _columnFor(query?.sortBy);
-    final ascending = query?.sortOrder == SortOrder.asc;
-
-    var finalBuilder = builder
-        .order(sortColumn, ascending: ascending)
-        .order('id', ascending: true) // tie-breaker for stable sort
+    // 4. الترتيب النهائي (Tie-breaker)
+    // المحترفون يضعون الـ ID كعامل حسم دائماً لضمان عدم تكرار البيانات
+    final response = await builder
+        .order(sortColumn, ascending: isAscending)
+        .order('id', ascending: isAscending) 
         .limit(limit);
 
-    // 5. Apply offset-based pagination when cursor is not used
-    if (cursor == null && offset > 0) {
-      finalBuilder = finalBuilder.range(offset, offset + limit - 1);
-    }
-
-    final response = await finalBuilder;
-
-    return (response as List)
+    final res= (response as List)
         .map((row) => ProductModel.fromSupabase(row as Map<String, dynamic>))
         .toList();
+     //   log(  ' imges first: ${res.isNotEmpty ? res.first.images.first : 'none'}');
+    log('Fetched ${res.length} products with cursor: $cursor,first ID: ${res.isNotEmpty ? res.first.id : 'none'}, last ID: ${res.isNotEmpty ? res.last.id : 'none'}');
+  return res;
   }
 
   @override
@@ -84,10 +91,13 @@ class SupabaseProductRepository implements ProductRepository {
         .gte('rating', 4.5)
         .order('created_at', ascending: false)
         .limit(10);
-
-    return (response as List)
+        
+  final  res= (response as List)
         .map((row) => ProductModel.fromSupabase(row as Map<String, dynamic>))
         .toList();
+      //  log('Fetched ${res.length} featured products last: ${res.isNotEmpty ? res.last.id: 'none'}');
+
+        return res;
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -100,7 +110,7 @@ class SupabaseProductRepository implements ProductRepository {
         return 'rating';
       case ProductSortField.createdAt:
       case null:
-        return 'created_at';
+        return 'id';
     }
   }
 }

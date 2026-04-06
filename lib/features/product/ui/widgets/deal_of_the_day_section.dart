@@ -1,3 +1,7 @@
+
+
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../logic/deal_timer_notifier.dart';
@@ -24,14 +28,14 @@ class DealOfTheDaySection extends ConsumerWidget {
               vertical: r.isPhone ? 12 : 14,
             ),
             decoration: BoxDecoration(
-              gradient: HomeColors.dealBannerGradient,
+              gradient: AppColors.dealBannerGradient,
               borderRadius: BorderRadius.circular(r.borderRadius),
             ),
             child: Row(
               children: [
                 const Icon(
                   Icons.timer_outlined,
-                  color: HomeColors.white,
+                  color: AppColors.white,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
@@ -40,9 +44,9 @@ class DealOfTheDaySection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Deal of the Day',
+                        AppStrings.dealOfTheDay,
                         style: TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: r.bodyFontSize,
                           fontWeight: FontWeight.w700,
                         ),
@@ -56,9 +60,9 @@ class DealOfTheDaySection extends ConsumerWidget {
                   child: Row(
                     children: [
                       Text(
-                        'View all',
+                        AppStrings.viewAll,
                         style: TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: r.captionFontSize,
                           fontWeight: FontWeight.w600,
                         ),
@@ -66,7 +70,7 @@ class DealOfTheDaySection extends ConsumerWidget {
                       const SizedBox(width: 2),
                       const Icon(
                         Icons.arrow_forward_rounded,
-                        color: HomeColors.white,
+                        color: AppColors.white,
                         size: 14,
                       ),
                     ],
@@ -107,22 +111,33 @@ class _ProductList extends ConsumerState<ProductlistView> {
   void initState() {
     super.initState();
     scrollController.addListener(_onscroll);
-    // Fetch products when the widget is first built
   }
 
   void _onscroll() {
     final notifier = ref.read(productNotifierProvider.notifier);
+    final hasmore = ref.read(productHasMoreProvider);
+    final isloading = ref.read(productIsLoadingProvider); // أو state واحد عندك
+
     if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 200) {
+            scrollController.position.maxScrollExtent - 200 &&
+        !isloading &&
+        hasmore) {
+          log("Scrolled near end, loading more products...");
       notifier.loadMore();
     }
   }
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }             
 
   @override
   Widget build(BuildContext context) {
     final products = ref.watch(productListProvider);
     final isLoading = ref.watch(productIsLoadingProvider);
-    if (isLoading) {
+   // log("Building ProductListView: ${products[0].images.first} products, isLoading: $isLoading");
+      if (isLoading) {
       return ListView.separated(
         controller: scrollController,
         scrollDirection: Axis.horizontal,
@@ -138,8 +153,8 @@ class _ProductList extends ConsumerState<ProductlistView> {
     if (products.isEmpty) {
       return const Center(
         child: Text(
-          'No deals right now',
-          style: TextStyle(color: HomeColors.textMid),
+          AppStrings.noDealsRightNow,
+          style: TextStyle(color: AppColors.textMid),
         ),
       );
     }
@@ -153,14 +168,13 @@ class _ProductList extends ConsumerState<ProductlistView> {
       cacheExtent: r.cardWidth * 3,
       separatorBuilder: (_, _2) => SizedBox(width: r.gridSpacing),
       itemBuilder: (_, i) {
-
-        if(i == products.length) {
+        if (i == products.length) {
           return const SizedBox(
             width: 60,
             child: Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: HomeColors.primary,
+                color: AppColors.primary,
               ),
             ),
           );
@@ -209,7 +223,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
         child: Container(
           width: r.cardWidth,
           decoration: BoxDecoration(
-            color: HomeColors.bgGrey,
+            color: AppColors.bgGrey,
             borderRadius: BorderRadius.circular(r.borderRadius),
           ),
           child: Column(
@@ -218,7 +232,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
               Container(
                 height: r.cardImageHeight,
                 decoration: BoxDecoration(
-                  color: HomeColors.divider,
+                  color: AppColors.divider,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(r.borderRadius),
                   ),
@@ -256,7 +270,7 @@ class _Line extends StatelessWidget {
       width: w,
       height: h,
       decoration: BoxDecoration(
-        color: HomeColors.divider,
+        color: AppColors.divider,
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -274,7 +288,7 @@ class CountdownText extends ConsumerWidget {
     return Text(
       text,
       style: TextStyle(
-        color: HomeColors.white.withValues(alpha: 0.85),
+        color: AppColors.white.withValues(alpha: 0.85),
         fontSize: r.captionFontSize,
       ),
     );

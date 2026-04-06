@@ -1,0 +1,12 @@
+export 'package:new_auth/core/theme/app_colors.dart';
+export 'package:new_auth/core/constants/app_strings.dart';
+export '../../../home/ui/widgets/home_app_bar.dart';
+export '../../../home/ui/widgets/home_responsive.dart';
+export 'deal_of_the_day_section.dart';
+export '../../../home/ui/widgets/home_bottom_nav.dart';
+export '../../../home/ui/widgets/home_search_bar.dart';
+export 'misc_banners.dart';
+export 'new_arrivals_section.dart';
+export 'offer_banners.dart';
+export 'promo_banner.dart';
+export 'trending_products_section.dart';

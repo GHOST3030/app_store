@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../logic/product_providers.dart';
-import 'export_allthings.dart';
+import '../../../product/logic/product_providers.dart';
+import '../../../product/ui/widgets/export_allthings.dart';
 
 class HomeSearchBar extends ConsumerStatefulWidget {
   const HomeSearchBar({super.key});
@@ -33,13 +33,13 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
         controller: _controller,
         textInputAction: TextInputAction.search,
         onSubmitted: _onSubmit,
-        style: TextStyle(fontSize: r.bodyFontSize, color: HomeColors.textDark),
+        style: TextStyle(fontSize: r.bodyFontSize, color: AppColors.textDark),
         decoration: InputDecoration(
           filled: true,
-          fillColor: HomeColors.bgGrey,
-          hintText: 'Search any Product...',
-          hintStyle: TextStyle(color: HomeColors.textMid, fontSize: r.bodyFontSize),
-          prefixIcon: const Icon(Icons.search_rounded, color: HomeColors.textMid, size: 22),
+          fillColor: AppColors.bgGrey,
+          hintText: AppStrings.searchHint,
+          hintStyle: TextStyle(color: AppColors.textMid, fontSize: r.bodyFontSize),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMid, size: 22),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -52,11 +52,11 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(8),
-                    child: Icon(Icons.close_rounded, color: HomeColors.textMid, size: 18),
+                    child: Icon(Icons.close_rounded, color: AppColors.textMid, size: 18),
                   ),
                 ),
               IconButton(
-                icon: const Icon(Icons.mic_none_rounded, color: HomeColors.primary, size: 20),
+                icon: const Icon(Icons.mic_none_rounded, color: AppColors.primary, size: 20),
                 onPressed: () {},
               ),
             ],

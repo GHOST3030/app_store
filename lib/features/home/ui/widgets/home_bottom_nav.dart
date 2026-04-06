@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'export_allthings.dart';
+import '../../../product/ui/widgets/export_allthings.dart';
 
 class HomeBottomNav extends StatelessWidget {
   const HomeBottomNav({
@@ -12,11 +12,11 @@ class HomeBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _items = [
-    (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.favorite_border_rounded, label: 'Wishlist'),
-    (icon: Icons.shopping_cart_outlined, label: 'Cart'),
-    (icon: Icons.search_rounded, label: 'Search'),
-    (icon: Icons.settings_outlined, label: 'Setting'),
+    (icon: Icons.home_rounded, label: AppStrings.home),
+    (icon: Icons.favorite_border_rounded, label: AppStrings.wishlist),
+    (icon: Icons.shopping_cart_outlined, label: AppStrings.cart),
+    (icon: Icons.search_rounded, label: AppStrings.search),
+    (icon: Icons.settings_outlined, label: AppStrings.setting),
   ];
 
   @override
@@ -25,10 +25,10 @@ class HomeBottomNav extends StatelessWidget {
     return Container(
       height: r.bottomNavHeight,
       decoration: BoxDecoration(
-        color: HomeColors.white,
+        color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: AppColors.black.withValues(alpha: 0.07),
             blurRadius: 16,
             offset: const Offset(0, -3),
           ),
@@ -81,13 +81,13 @@ class _NavBtn extends StatelessWidget {
               padding: EdgeInsets.all(r.isPhone ? 6 : 8),
               decoration: BoxDecoration(
                 color: selected
-                    ? HomeColors.primary.withOpacity(0.12)
+                    ? AppColors.primary.withValues(alpha: 0.12)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
-                color: selected ? HomeColors.primary : HomeColors.textMid,
+                color: selected ? AppColors.primary : AppColors.textMid,
                 size: r.isPhone ? 22 : 24,
               ),
             ),
@@ -97,7 +97,7 @@ class _NavBtn extends StatelessWidget {
               style: TextStyle(
                 fontSize: r.isPhone ? 10 : 11,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                color: selected ? HomeColors.primary : HomeColors.textMid,
+                color: selected ? AppColors.primary : AppColors.textMid,
               ),
             ),
           ],

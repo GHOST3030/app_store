@@ -17,8 +17,8 @@ class NewArrivalsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'New Arrivals',
-          subtitle: "Summer '25 Collections",
+          title: AppStrings.newArrivals,
+          subtitle: AppStrings.summerCollections,
           onViewAll: () {},
         ),
         SizedBox(height: r.isPhone ? 14 : 18),
@@ -26,8 +26,8 @@ class NewArrivalsSection extends ConsumerWidget {
           const SizedBox(
             height: 60,
             child: Center(
-              child: Text('No new arrivals',
-                  style: TextStyle(color: HomeColors.textMid)),
+              child: Text(AppStrings.noNewArrivals,
+                  style: TextStyle(color: AppColors.textMid)),
             ),
           )
         else

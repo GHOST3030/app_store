@@ -70,7 +70,7 @@ ProviderContainer _container(ProductRepository mock) {
 
 /// Waits for the AsyncNotifier to resolve past AsyncLoading.
 Future<ProductState> _waitForData(ProviderContainer c) async {
-  return await c.read(productNotifierProvider.future);
+  return await c.read(productNotifierProvider);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -93,7 +93,6 @@ void main() {
       expect(data.featuredProducts.length, 1);
       expect(data.failure, isNull);
       expect(data.cursor, isNotNull); // set from last product
-      expect(data.offset, 2);
     });
 
     test('hasMore = false when < pageSize items returned', () async {
@@ -112,8 +111,7 @@ void main() {
 
   group('refresh', () {
     test('preserves the current query on refresh (Fix 1)', () async {
-      final mock = MockProductRepository()
-        ..stubbedProducts = [_product('1')];
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
 
       final c = _container(mock);
       addTearDown(c.dispose);
@@ -140,28 +138,27 @@ void main() {
   group('loadMore', () {
     test('appends products and advances cursor/offset', () async {
       // Page 1
-      final page1 = List.generate(20, (i) => _product(
-        'p$i',
-        createdAt: DateTime(2024, 1, 20 - i),
-      ));
+      final page1 = List.generate(
+        20,
+        (i) => _product('p$i', createdAt: DateTime(2024, 1, 20 - i)),
+      );
       final mock = MockProductRepository()..stubbedProducts = page1;
 
       final c = _container(mock);
       addTearDown(c.dispose);
 
       await _waitForData(c);
-      expect(c.read(productNotifierProvider).requireValue.products.length, 20);
+      expect(c.read(productNotifierProvider).products.length, 20);
 
       // Page 2
       final page2 = [_product('x1'), _product('x2')];
       mock.stubbedProducts = page2;
 
       await c.read(productNotifierProvider.notifier).loadMore();
-      final data = c.read(productNotifierProvider).requireValue;
+      final data = c.read(productNotifierProvider);
 
       expect(data.products.length, 22); // 20 + 2
       expect(data.hasMore, isFalse); // page2 < 20
-      expect(data.offset, 22);
     });
 
     test('de-duplicates products by id', () async {
@@ -177,7 +174,7 @@ void main() {
       mock.stubbedProducts = [_product('p0'), _product('new1')];
       await c.read(productNotifierProvider.notifier).loadMore();
 
-      final data = c.read(productNotifierProvider).requireValue;
+      final data = c.read(productNotifierProvider);
       final ids = data.products.map((p) => p.id).toList();
       expect(ids.where((id) => id == 'p0').length, 1); // no duplicate
       expect(ids.contains('new1'), isTrue);
@@ -191,12 +188,12 @@ void main() {
       addTearDown(c.dispose);
 
       await _waitForData(c);
-      expect(c.read(productNotifierProvider).requireValue.hasMore, isFalse);
+      expect(c.read(productNotifierProvider).hasMore, isFalse);
 
       mock.stubbedProducts = [_product('should-not-appear')];
       await c.read(productNotifierProvider.notifier).loadMore();
 
-      final data = c.read(productNotifierProvider).requireValue;
+      final data = c.read(productNotifierProvider);
       expect(data.products.length, 1); // unchanged
     });
 
@@ -225,7 +222,10 @@ void main() {
 
     test('uses offset pagination when sort != createdAt (Fix 2)', () async {
       final mock = MockProductRepository()
-        ..stubbedProducts = List.generate(20, (i) => _product('p$i', price: i * 10));
+        ..stubbedProducts = List.generate(
+          20,
+          (i) => _product('p$i', price: i * 10),
+        );
 
       final c = _container(mock);
       addTearDown(c.dispose);
@@ -233,10 +233,9 @@ void main() {
       await _waitForData(c);
 
       // Change sort to price
-      await c.read(productNotifierProvider.notifier).setSort(
-            sortBy: ProductSortField.price,
-            order: SortOrder.asc,
-          );
+      await c
+          .read(productNotifierProvider.notifier)
+          .setSort(sortBy: ProductSortField.price, order: SortOrder.asc);
       await _waitForData(c);
 
       // Now loadMore — should use offset, not cursor
@@ -252,8 +251,7 @@ void main() {
 
   group('search', () {
     test('sets search in query and reloads', () async {
-      final mock = MockProductRepository()
-        ..stubbedProducts = [_product('1')];
+      final mock = MockProductRepository()..stubbedProducts = [_product('1')];
 
       final c = _container(mock);
       addTearDown(c.dispose);
@@ -311,10 +309,9 @@ void main() {
 
       await _waitForData(c);
 
-      await c.read(productNotifierProvider.notifier).setFilter(
-            minPrice: 50.0,
-            onlyAvailable: true,
-          );
+      await c
+          .read(productNotifierProvider.notifier)
+          .setFilter(minPrice: 50.0, onlyAvailable: true);
       await _waitForData(c);
 
       expect(mock.lastQuery?.minPrice, 50.0);
@@ -355,10 +352,9 @@ void main() {
 
       await _waitForData(c);
 
-      await c.read(productNotifierProvider.notifier).setSort(
-            sortBy: ProductSortField.price,
-            order: SortOrder.asc,
-          );
+      await c
+          .read(productNotifierProvider.notifier)
+          .setSort(sortBy: ProductSortField.price, order: SortOrder.asc);
       final data = await _waitForData(c);
 
       expect(data.query.sortBy, ProductSortField.price);
@@ -373,9 +369,9 @@ void main() {
 
       await _waitForData(c);
 
-      await c.read(productNotifierProvider.notifier).setSort(
-            sortBy: ProductSortField.price,
-          );
+      await c
+          .read(productNotifierProvider.notifier)
+          .setSort(sortBy: ProductSortField.price);
       await _waitForData(c);
 
       await c.read(productNotifierProvider.notifier).clearSort();
@@ -402,26 +398,29 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final state = c.read(productNotifierProvider);
-      expect(state.hasError, isTrue);
-      expect(state.error, isA<SocketException>());
+      expect(state.failure, isNotNull);
+      expect(state.failure, isA<SocketException>());
     });
 
-    test('loadMore error maps SocketException to NetworkFailure (Fix 5)', () async {
-      final mock = MockProductRepository()
-        ..stubbedProducts = List.generate(20, (i) => _product('p$i'));
+    test(
+      'loadMore error maps SocketException to NetworkFailure (Fix 5)',
+      () async {
+        final mock = MockProductRepository()
+          ..stubbedProducts = List.generate(20, (i) => _product('p$i'));
 
-      final c = _container(mock);
-      addTearDown(c.dispose);
+        final c = _container(mock);
+        addTearDown(c.dispose);
 
-      await _waitForData(c);
+        await _waitForData(c);
 
-      // Make loadMore throw
-      mock.errorToThrow = const SocketException('no internet');
-      await c.read(productNotifierProvider.notifier).loadMore();
+        // Make loadMore throw
+        mock.errorToThrow = const SocketException('no internet');
+        await c.read(productNotifierProvider.notifier).loadMore();
 
-      final data = c.read(productNotifierProvider).requireValue;
-      expect(data.failure, isA<NetworkFailure>());
-    });
+        final data = c.read(productNotifierProvider);
+        expect(data.failure, isA<NetworkFailure>());
+      },
+    );
 
     test('loadMore error maps TimeoutException to NetworkFailure', () async {
       final mock = MockProductRepository()
@@ -435,7 +434,7 @@ void main() {
       mock.errorToThrow = TimeoutException('slow');
       await c.read(productNotifierProvider.notifier).loadMore();
 
-      final data = c.read(productNotifierProvider).requireValue;
+      final data = c.read(productNotifierProvider);
       expect(data.failure, isA<NetworkFailure>());
     });
 
@@ -451,7 +450,7 @@ void main() {
       mock.errorToThrow = Exception('something weird');
       await c.read(productNotifierProvider.notifier).loadMore();
 
-      final data = c.read(productNotifierProvider).requireValue;
+      final data = c.read(productNotifierProvider);
       expect(data.failure, isA<UnknownFailure>());
     });
   });

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/theme/app_colors.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
 
@@ -26,13 +28,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+      SnackBar(content: Text(message), backgroundColor: AppColors.success),
     );
   }
 
@@ -48,7 +50,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -57,79 +59,43 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             children: [
               const SizedBox(height: 24),
               Text(
-                'Create an\naccount',
+                AppStrings.createAnAccount,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.black,
                       height: 1.2,
                     ),
               ),
               const SizedBox(height: 48),
 
               // Email Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    hintText: 'Username or Email',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.person, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  enabled: !isLoading,
-                ),
+              _SignupInputField(
+                controller: _emailController,
+                hintText: AppStrings.usernameOrEmail,
+                prefixIcon: Icons.person,
+                enabled: !isLoading,
               ),
               const SizedBox(height: 16),
 
               // Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: Icon(Icons.visibility, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  obscureText: true,
-                  enabled: !isLoading,
-                ),
+              _SignupInputField(
+                controller: _passwordController,
+                hintText: AppStrings.password,
+                prefixIcon: Icons.lock,
+                suffixIcon: Icons.visibility,
+                obscureText: true,
+                enabled: !isLoading,
               ),
               const SizedBox(height: 16),
 
               // Confirm Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: _confirmPasswordController,
-                  decoration: const InputDecoration(
-                    hintText: 'ConfirmPassword',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: Icon(Icons.visibility, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  obscureText: true,
-                  enabled: !isLoading,
-                ),
+              _SignupInputField(
+                controller: _confirmPasswordController,
+                hintText: AppStrings.confirmPassword,
+                prefixIcon: Icons.lock,
+                suffixIcon: Icons.visibility,
+                obscureText: true,
+                enabled: !isLoading,
               ),
 
               const SizedBox(height: 24),
@@ -137,11 +103,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               // Terms and Conditions text
               RichText(
                 text: const TextSpan(
-                  style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.5),
+                  style: TextStyle(color: AppColors.textMid, fontSize: 13, height: 1.5),
                   children: [
-                    TextSpan(text: 'By clicking the '),
-                    TextSpan(text: 'Register', style: TextStyle(color: Color(0xFFE94057))),
-                    TextSpan(text: ' button, you agree to the public offer'),
+                    TextSpan(text: AppStrings.byClickingThe),
+                    TextSpan(text: AppStrings.register, style: TextStyle(color: AppColors.authAccent)),
+                    TextSpan(text: AppStrings.agreeToPublicOffer),
                   ],
                 ),
               ),
@@ -150,7 +116,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               // Create Account Button
               if (isLoading)
-                const Center(child: CircularProgressIndicator(color: Color(0xFFE94057)))
+                const Center(child: CircularProgressIndicator(color: AppColors.authAccent))
               else
                 ElevatedButton(
                   onPressed: () async {
@@ -159,18 +125,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     final confirmPassword = _confirmPasswordController.text.trim();
                     
                     if (usernameOrEmail.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-                      _showError('Please fill in all fields');
+                      _showError(AppStrings.pleaseFillInAllFields);
                     } else if (password != confirmPassword) {
-                      _showError('Passwords do not match');
+                      _showError(AppStrings.passwordsDoNotMatch);
                     } else {
-                      // Basic check if the input is an email
                       final isEmail = usernameOrEmail.contains('@') && usernameOrEmail.contains('.');
                       
                       if (isEmail) {
                         await ref.read(authControllerProvider.notifier).signUp(usernameOrEmail, password);
                       } else {
-                        // User entered a username. We'll generate a dummy email for Supabase to use as the primary
-                        // identifier, and save the actual username in the user metadata using the `username` parameter.
                         final sanitizedUsername = usernameOrEmail.replaceAll(' ', '').toLowerCase();
                         final dummyEmail = '$sanitizedUsername@placeholder.app.com';
                         await ref.read(authControllerProvider.notifier).signUp(dummyEmail, password, username: usernameOrEmail);
@@ -180,18 +143,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       final currentState = ref.read(authControllerProvider);
                       if (!currentState.hasError) {
                          if (currentState.value == null) {
-                           // Email verification is required by Supabase
-                           _showSuccess('Account created! Please check your email and verify your account to log in.');
+                           _showSuccess(AppStrings.verifyAccountToLogin);
                            context.go('/login');
-                         } else {
-                           // User is authenticated! GoRouter handles the redirect to /home.
                          }
                       }
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF33D5B),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.authButton,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -199,7 +159,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Create Account',
+                    AppStrings.createAccount,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -213,8 +173,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               const Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '- OR Continue with -',
-                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                  AppStrings.orContinueWith,
+                  style: TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
                 ),
               ),
 
@@ -226,7 +186,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 children: [
                   _SocialSignupButton(
                     fallbackIcon: Icons.g_mobiledata,
-                    color: Colors.red,
+                    color: AppColors.error,
                     onPressed: () {
                       ref.read(authControllerProvider.notifier).loginWithGoogle();
                     },
@@ -234,7 +194,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   const SizedBox(width: 20),
                   _SocialSignupButton(
                     fallbackIcon: Icons.apple,
-                    color: Colors.black,
+                    color: AppColors.black,
                     onPressed: () {
                       // Apple logic
                     },
@@ -257,18 +217,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'I Already Have an Account ',
-                    style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                    AppStrings.iAlreadyHaveAnAccount,
+                    style: TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
                   ),
                   GestureDetector(
                     onTap: () => context.go('/login'),
                     child: const Text(
-                      'Login',
+                      AppStrings.login,
                       style: TextStyle(
-                        color: Color(0xFFE94057),
+                        color: AppColors.authAccent,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
-                        decorationColor: Color(0xFFE94057),
+                        decorationColor: AppColors.authAccent,
                       ),
                     ),
                   ),
@@ -281,6 +241,54 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     );
   }
 }
+
+// ─── Reusable signup input field ──────────────────────────────────────────────
+
+class _SignupInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData prefixIcon;
+  final IconData? suffixIcon;
+  final bool obscureText;
+  final bool enabled;
+
+  const _SignupInputField({
+    required this.controller,
+    required this.hintText,
+    required this.prefixIcon,
+    this.suffixIcon,
+    this.obscureText = false,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.inputFill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textLight),
+      ),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: AppColors.textMid),
+          border: InputBorder.none,
+          prefixIcon: Icon(prefixIcon, color: AppColors.textMid),
+          suffixIcon: suffixIcon != null
+              ? Icon(suffixIcon, color: AppColors.textMid)
+              : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        obscureText: obscureText,
+        enabled: enabled,
+      ),
+    );
+  }
+}
+
+// ─── Social signup button ─────────────────────────────────────────────────────
 
 class _SocialSignupButton extends StatelessWidget {
   final IconData fallbackIcon;
@@ -303,8 +311,8 @@ class _SocialSignupButton extends StatelessWidget {
         height: 60,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE94057).withOpacity(0.5)),
-          color: const Color(0xFFE94057).withOpacity(0.05),
+          border: Border.all(color: AppColors.authAccent.withValues(alpha: 0.5)),
+          color: AppColors.authAccent.withValues(alpha: 0.05),
         ),
         child: Center(
           child: Icon(fallbackIcon, size: 32, color: color),

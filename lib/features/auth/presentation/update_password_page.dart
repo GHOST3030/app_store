@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/conistent/app_strings.dart';
+import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/theme/app_colors.dart';
 import '../logic/providers_auth.dart';
 
 class UpdatePasswordPage extends ConsumerStatefulWidget {
@@ -24,7 +25,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? AppColors.error : AppColors.success,
       ),
     );
   }
@@ -32,25 +33,21 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   Future<void> _updatePassword() async {
     final password = _passwordController.text.trim();
     if (password.isEmpty || password.length < 6) {
-      _showMessage(Appstrings.passwordmustbeatleast6, isError: true);
+      _showMessage(AppStrings.passwordMustBeAtLeast6, isError: true);
       return;
     }
 
     try {
       await ref.read(authControllerProvider.notifier).updatePassword(password);
       
-      // We look at the latest state to see if there was an error emitted during the update process
       final authState = ref.read(authControllerProvider);
       
       if (authState.hasError) {
         _showMessage(authState.error.toString(), isError: true);
       } else {
-        _showMessage(Appstrings.passwordsuccessfully);
+        _showMessage(AppStrings.passwordSuccessfully);
         
-        // Log the user out so they are forced to log in with the new password
         await ref.read(authControllerProvider.notifier).logout();
-        
-   
       }
     } catch (e) {
       _showMessage(e.toString(), isError: true);
@@ -60,7 +57,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(Appstrings.updatepassword)),
+      appBar: AppBar(title: const Text(AppStrings.updatePassword)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -69,20 +66,20 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-               Appstrings.setNewPassword,
+                AppStrings.setNewPassword,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               const Text(
-                Appstrings.enteryournewpaasword,
+                AppStrings.enterYourNewPassword,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: Appstrings.newpaasword,
+                  labelText: AppStrings.newPassword,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
@@ -93,7 +90,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
                 onPressed: _updatePassword,
                 child: const Padding(
                   padding: EdgeInsets.all(12.0),
-                  child: Text(Appstrings.updatepassword, style: TextStyle(fontSize: 16)),
+                  child: Text(AppStrings.updatePassword, style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

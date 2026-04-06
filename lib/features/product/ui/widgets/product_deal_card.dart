@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/features/product/data/product_model.dart';
-
-import 'home_colors.dart';
 
 class ProductDealCard extends StatelessWidget {
   const ProductDealCard({
@@ -29,12 +29,12 @@ class ProductDealCard extends StatelessWidget {
       child: Container(
         width: width,
         decoration: BoxDecoration(
-          color: HomeColors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: HomeColors.divider),
+          border: Border.all(color: AppColors.divider),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: AppColors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -68,13 +68,13 @@ class ProductDealCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: HomeColors.badge,
+                        color: AppColors.badge,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$discountPct% off',
+                        '$discountPct% ${AppStrings.off}',
                         style: const TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
@@ -88,16 +88,16 @@ class ProductDealCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: HomeColors.white,
+                      color: AppColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: AppColors.black.withValues(alpha: 0.08),
                             blurRadius: 4)
                       ],
                     ),
                     child: const Icon(Icons.favorite_border_rounded,
-                        size: 14, color: HomeColors.primary),
+                        size: 14, color: AppColors.primary),
                   ),
                 ),
               ],
@@ -116,7 +116,7 @@ class ProductDealCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: HomeColors.textDark,
+                      color: AppColors.textDark,
                       height: 1.3,
                     ),
                   ),
@@ -126,20 +126,20 @@ class ProductDealCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.star_rounded,
-                          color: HomeColors.starYellow, size: 13),
+                          color: AppColors.starYellow, size: 13),
                       const SizedBox(width: 2),
                       Text(
                         product.rating.toStringAsFixed(1),
                         style: const TextStyle(
-                            fontSize: 11, color: HomeColors.textMid),
+                            fontSize: 11, color: AppColors.textMid),
                       ),
                       const Spacer(),
                       if (product.stock == 0)
                         const Text(
-                          'Out of Stock',
+                          AppStrings.outOfStock,
                           style: TextStyle(
                               fontSize: 9,
-                              color: HomeColors.badge,
+                              color: AppColors.badge,
                               fontWeight: FontWeight.w600),
                         ),
                     ],
@@ -153,7 +153,7 @@ class ProductDealCard extends StatelessWidget {
                       '₹${product.price.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: HomeColors.priceOld,
+                        color: AppColors.priceOld,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
@@ -162,7 +162,7 @@ class ProductDealCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: HomeColors.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ] else
@@ -171,7 +171,7 @@ class ProductDealCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: HomeColors.textDark,
+                        color: AppColors.textDark,
                       ),
                     ),
                 ],
@@ -193,9 +193,9 @@ class _ImagePlaceholder extends StatelessWidget {
     return Container(
       width: width,
       height: 120,
-      color: HomeColors.bgGrey,
+      color: AppColors.bgGrey,
       child: const Icon(Icons.image_not_supported_outlined,
-          color: HomeColors.priceOld, size: 32),
+          color: AppColors.priceOld, size: 32),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
@@ -26,7 +28,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   late String errmessage = '';
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
 
     errmessage = message;
@@ -50,7 +52,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -59,62 +61,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               const SizedBox(height: 24),
               Text(
-                'Welcome\nBack!',
+                AppStrings.welcomeBack,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppColors.black,
                   height: 1.2,
                 ),
               ),
               const SizedBox(height: 48),
 
               // Email Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    hintText: 'Username or Email',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.person, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  enabled: !isLoading,
-                ),
+              _AuthInputField(
+                controller: _emailController,
+                hintText: AppStrings.usernameOrEmail,
+                prefixIcon: Icons.person,
+                enabled: !isLoading,
               ),
               const SizedBox(height: 16),
 
               // Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: Icon(Icons.visibility, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  obscureText: true,
-                  enabled: !isLoading,
-                ),
+              _AuthInputField(
+                controller: _passwordController,
+                hintText: AppStrings.password,
+                prefixIcon: Icons.lock,
+                suffixIcon: Icons.visibility,
+                obscureText: true,
+                enabled: !isLoading,
               ),
 
               const SizedBox(height: 12),
@@ -130,21 +102,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
-                    'Forgot Password?',
+                    AppStrings.forgotPasswordAsk,
                     style: TextStyle(
-                      color: Color(0xFFE94057),
+                      color: AppColors.authAccent,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
               ),
 
-           
-
               // Login Button
               if (isLoading)
                 const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFE94057)),
+                  child: CircularProgressIndicator(color: AppColors.authAccent),
                 )
               else
                 ElevatedButton(
@@ -152,7 +122,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     final usernameOrEmail = _emailController.text.trim();
                     final password = _passwordController.text.trim();
                     if (usernameOrEmail.isNotEmpty && password.isNotEmpty) {
-                      // Basic check if the input is an email
                       final isEmail =
                           usernameOrEmail.contains('@') &&
                           usernameOrEmail.contains('.');
@@ -166,12 +135,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           .read(authControllerProvider.notifier)
                           .login(emailToUse, password);
                     } else {
-                      _showError('Please fill in all fields');
+                      _showError(AppStrings.pleaseFillInAllFields);
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF33D5B),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.authButton,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -179,7 +148,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Login',
+                    AppStrings.login,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -190,9 +159,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '- OR Continue with -',
+                  AppStrings.orContinueWith,
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: AppColors.textMid,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -206,9 +175,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 children: [
                   _SocialLoginButton(
                     icon:
-                        'assets/google.png', // Fallback to icons if assets aren't there
+                        'assets/google.png',
                     fallbackIcon: Icons.g_mobiledata,
-                    color: Colors.red,
+                    color: AppColors.error,
                     onPressed: () {
                       ref
                           .read(authControllerProvider.notifier)
@@ -219,7 +188,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   _SocialLoginButton(
                     icon: 'assets/apple.png',
                     fallbackIcon: Icons.apple,
-                    color: Colors.black,
+                    color: AppColors.black,
                     onPressed: () {
                       // Apple logic
                     },
@@ -243,21 +212,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Create An Account ',
+                    AppStrings.createAnAccountText,
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: AppColors.textMid,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => context.go('/signup'),
                     child: const Text(
-                      'Sign Up',
+                      AppStrings.signUp,
                       style: TextStyle(
-                        color: Color(0xFFE94057),
+                        color: AppColors.authAccent,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
-                        decorationColor: Color(0xFFE94057),
+                        decorationColor: AppColors.authAccent,
                       ),
                     ),
                   ),
@@ -270,6 +239,57 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
+
+// ─── Reusable auth input field ─────────────────────────────────────────────────
+
+class _AuthInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData prefixIcon;
+  final IconData? suffixIcon;
+  final bool obscureText;
+  final bool enabled;
+
+  const _AuthInputField({
+    required this.controller,
+    required this.hintText,
+    required this.prefixIcon,
+    this.suffixIcon,
+    this.obscureText = false,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.inputFill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textLight),
+      ),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: AppColors.textMid),
+          border: InputBorder.none,
+          prefixIcon: Icon(prefixIcon, color: AppColors.textMid),
+          suffixIcon: suffixIcon != null
+              ? Icon(suffixIcon, color: AppColors.textMid)
+              : null,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        obscureText: obscureText,
+        enabled: enabled,
+      ),
+    );
+  }
+}
+
+// ─── Social login button ─────────────────────────────────────────────────────
 
 class _SocialLoginButton extends StatelessWidget {
   final String icon;
@@ -294,11 +314,10 @@ class _SocialLoginButton extends StatelessWidget {
         height: 60,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE94057).withOpacity(0.5)),
-          color: const Color(0xFFE94057).withOpacity(0.05),
+          border: Border.all(color: AppColors.authAccent.withValues(alpha: 0.5)),
+          color: AppColors.authAccent.withValues(alpha: 0.05),
         ),
         child: Center(
-          // Normally Image.asset(icon) would be used, but using Icon for fallback
           child: Icon(fallbackIcon, size: 32, color: color),
         ),
       ),

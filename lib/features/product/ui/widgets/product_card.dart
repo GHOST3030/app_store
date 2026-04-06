@@ -5,7 +5,6 @@ import 'export_allthings.dart';
 class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
-  
     required this.product,
     this.width,
     this.onTap,
@@ -30,12 +29,12 @@ class ProductCard extends StatelessWidget {
       child: Container(
         width: w,
         decoration: BoxDecoration(
-          color: HomeColors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(r.borderRadius),
-          border: Border.all(color: HomeColors.divider),
+          border: Border.all(color: AppColors.divider),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: AppColors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -53,7 +52,7 @@ class ProductCard extends StatelessWidget {
                   ),
                   child: product.images.isNotEmpty
                       ? Image.network(
-                          product.images.first,
+                          product.images[0],
                           cacheWidth: 300,
                           width: double.infinity,
                           height: r.cardImageHeight,
@@ -70,13 +69,13 @@ class ProductCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: HomeColors.badge,
+                        color: AppColors.badge,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$pct% off',
+                        '$pct% ${AppStrings.off}',
                         style: const TextStyle(
-                          color: HomeColors.white,
+                          color: AppColors.white,
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                         ),
@@ -90,14 +89,14 @@ class ProductCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: HomeColors.white,
+                      color: AppColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4),
+                        BoxShadow(color: AppColors.black.withValues(alpha: 0.08), blurRadius: 4),
                       ],
                     ),
                     child: const Icon(Icons.favorite_border_rounded,
-                        size: 14, color: HomeColors.primary),
+                        size: 14, color: AppColors.primary),
                   ),
                 ),
               ],
@@ -116,7 +115,7 @@ class ProductCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: r.captionFontSize + 1,
                       fontWeight: FontWeight.w600,
-                      color: HomeColors.textDark,
+                      color: AppColors.textDark,
                       height: 1.3,
                     ),
                   ),
@@ -124,21 +123,21 @@ class ProductCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.star_rounded,
-                          color: HomeColors.starYellow, size: 13),
+                          color: AppColors.starYellow, size: 13),
                       const SizedBox(width: 2),
                       Text(
                         product.rating.toStringAsFixed(1),
                         style: TextStyle(
                             fontSize: r.captionFontSize,
-                            color: HomeColors.textMid),
+                            color: AppColors.textMid),
                       ),
                       const Spacer(),
                       if (product.stock == 0)
                         Text(
-                          'Out',
+                          AppStrings.outOfStockShort,
                           style: TextStyle(
                               fontSize: r.captionFontSize - 1,
-                              color: HomeColors.badge,
+                              color: AppColors.badge,
                               fontWeight: FontWeight.w600),
                         ),
                     ],
@@ -149,7 +148,7 @@ class ProductCard extends StatelessWidget {
                       '₹${product.price.toStringAsFixed(0)}',
                       style: TextStyle(
                         fontSize: r.captionFontSize,
-                        color: HomeColors.priceOld,
+                        color: AppColors.priceOld,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
@@ -158,7 +157,7 @@ class ProductCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: r.priceFontSize,
                         fontWeight: FontWeight.w700,
-                        color: HomeColors.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ] else
@@ -167,7 +166,7 @@ class ProductCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: r.priceFontSize,
                         fontWeight: FontWeight.w700,
-                        color: HomeColors.textDark,
+                        color: AppColors.textDark,
                       ),
                     ),
                 ],
@@ -189,9 +188,9 @@ class _Placeholder extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: height,
-      color: HomeColors.bgGrey,
+      color: AppColors.bgGrey,
       child: const Icon(Icons.image_not_supported_outlined,
-          color: HomeColors.priceOld, size: 32),
+          color: AppColors.priceOld, size: 32),
     );
   }
 }

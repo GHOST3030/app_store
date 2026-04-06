@@ -12,13 +12,9 @@ class HotSummerSaleBanner extends StatelessWidget {
       child: Container(
         height: r.hotSaleHeight,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFF8E1), Color(0xFFFFCC02)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.summerSaleGradient,
           borderRadius: BorderRadius.circular(r.borderRadius),
-          border: Border.all(color: const Color(0xFFFFD54F)),
+          border: Border.all(color: AppColors.bannerBorder),
         ),
         child: Stack(
           children: [
@@ -30,7 +26,7 @@ class HotSummerSaleBanner extends StatelessWidget {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: HomeColors.white.withOpacity(0.25),
+                  color: AppColors.white.withValues(alpha: 0.25),
                 ),
               ),
             ),
@@ -42,12 +38,12 @@ class HotSummerSaleBanner extends StatelessWidget {
                     width: r.isPhone ? 50 : 62,
                     height: r.isPhone ? 50 : 62,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF6F00).withOpacity(0.15),
+                      color: AppColors.summerSaleIcon.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.people_rounded,
-                      color: const Color(0xFFE65100),
+                      color: AppColors.summerSaleIcon,
                       size: r.isPhone ? 26 : 32,
                     ),
                   ),
@@ -57,19 +53,19 @@ class HotSummerSaleBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '🔥 Hot Summer Sale!',
+                        AppStrings.hotSummerSale,
                         style: TextStyle(
                           fontSize: r.titleFontSize,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFFE65100),
+                          color: AppColors.summerSaleIcon,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Special Offers',
+                        AppStrings.specialOffers,
                         style: TextStyle(
                           fontSize: r.captionFontSize,
-                          color: const Color(0xFFBF360C),
+                          color: AppColors.summerSaleSub,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.8,
                         ),
@@ -83,13 +79,13 @@ class HotSummerSaleBanner extends StatelessWidget {
                             vertical: r.isPhone ? 5 : 7,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE65100),
+                            color: AppColors.summerSaleIcon,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            'Explore Deals',
+                            AppStrings.exploreDeals,
                             style: TextStyle(
-                              color: HomeColors.white,
+                              color: AppColors.white,
                               fontSize: r.captionFontSize,
                               fontWeight: FontWeight.w700,
                             ),
@@ -120,11 +116,11 @@ class SponsoredBanner extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: r.hPad),
           child: Text(
-            'Sponsored',
+            AppStrings.sponsored,
             style: TextStyle(
               fontSize: r.titleFontSize,
               fontWeight: FontWeight.w700,
-              color: HomeColors.textDark,
+              color: AppColors.textDark,
             ),
           ),
         ),
@@ -134,11 +130,7 @@ class SponsoredBanner extends StatelessWidget {
           child: Container(
             height: r.sponsoredHeight,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF37474F), Color(0xFF263238)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppColors.sponsoredGradient,
               borderRadius: BorderRadius.circular(r.borderRadius),
             ),
             child: Center(
@@ -146,18 +138,18 @@ class SponsoredBanner extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '– UP TO –',
+                    AppStrings.upTo,
                     style: TextStyle(
-                      color: HomeColors.white.withOpacity(0.6),
+                      color: AppColors.white.withValues(alpha: 0.6),
                       fontSize: r.captionFontSize,
                       letterSpacing: 3,
                       fontWeight: FontWeight.w300,
                     ),
                   ),
                   Text(
-                    '50% OFF',
+                    AppStrings.fiftyPercentOff,
                     style: TextStyle(
-                      color: HomeColors.white,
+                      color: AppColors.white,
                       fontSize: r.isPhone ? 38 : 50,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2,
@@ -172,13 +164,13 @@ class SponsoredBanner extends StatelessWidget {
                         vertical: r.isPhone ? 8 : 10,
                       ),
                       decoration: BoxDecoration(
-                        color: HomeColors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'up to 50% Off  →',
+                        AppStrings.upToFiftyPercentOff,
                         style: TextStyle(
-                          color: HomeColors.textDark,
+                          color: AppColors.textDark,
                           fontWeight: FontWeight.w700,
                           fontSize: r.captionFontSize,
                         ),

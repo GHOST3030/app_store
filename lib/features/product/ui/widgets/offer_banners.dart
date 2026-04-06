@@ -12,11 +12,9 @@ class SpecialOffersBanner extends StatelessWidget {
       child: Container(
         height: r.specialOfferHeight,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
-          ),
+          gradient: AppColors.specialOffersGradient,
           borderRadius: BorderRadius.circular(r.borderRadius),
-          border: Border.all(color: const Color(0xFFFFD54F), width: 1.2),
+          border: Border.all(color: AppColors.bannerBorder, width: 1.2),
         ),
         child: Row(
           children: [
@@ -26,12 +24,12 @@ class SpecialOffersBanner extends StatelessWidget {
                 width: r.isPhone ? 58 : 70,
                 height: r.isPhone ? 58 : 70,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6F00).withOpacity(0.12),
+                  color: AppColors.specialOfferIcon.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.local_offer_rounded,
-                  color: const Color(0xFFFF6F00),
+                  color: AppColors.specialOfferIcon,
                   size: r.isPhone ? 26 : 32,
                 ),
               ),
@@ -42,19 +40,19 @@ class SpecialOffersBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Special Offers 🔥',
+                    AppStrings.specialOffersFire,
                     style: TextStyle(
                       fontSize: r.bodyFontSize,
                       fontWeight: FontWeight.w700,
-                      color: HomeColors.textDark,
+                      color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'We make sure you get the offer\nyou need at best prices',
+                    AppStrings.offerAtBestPrices,
                     style: TextStyle(
                       fontSize: r.captionFontSize,
-                      color: HomeColors.textMid,
+                      color: AppColors.textMid,
                       height: 1.4,
                     ),
                   ),
@@ -64,7 +62,7 @@ class SpecialOffersBanner extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(right: r.isPhone ? 12 : 16),
               child: const Icon(Icons.chevron_right_rounded,
-                  color: HomeColors.textMid, size: 22),
+                  color: AppColors.textMid, size: 22),
             ),
           ],
         ),
@@ -84,9 +82,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
       child: Container(
         height: r.flatHeelsHeight,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFF8BBD9), Color(0xFFE91E63)],
-          ),
+          gradient: AppColors.flatHeelsGradient,
           borderRadius: BorderRadius.circular(r.borderRadius),
         ),
         child: Stack(
@@ -99,7 +95,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: HomeColors.white.withOpacity(0.10),
+                  color: AppColors.white.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -113,7 +109,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
                   Icon(
                     Icons.dry_cleaning_rounded,
                     size: r.isPhone ? 38 : 48,
-                    color: HomeColors.white,
+                    color: AppColors.white,
                   ),
                   SizedBox(width: r.isPhone ? 14 : 18),
                   Expanded(
@@ -122,18 +118,18 @@ class FlatAndHeelsBanner extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Flat and Heels',
+                          AppStrings.flatAndHeels,
                           style: TextStyle(
-                            color: HomeColors.white,
+                            color: AppColors.white,
                             fontSize: r.titleFontSize,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'Stand a chance to get rewarded',
+                          AppStrings.standAChanceToBeRewarded,
                           style: TextStyle(
-                            color: HomeColors.white,
+                            color: AppColors.white,
                             fontSize: r.captionFontSize,
                           ),
                         ),
@@ -148,13 +144,13 @@ class FlatAndHeelsBanner extends StatelessWidget {
                         vertical: r.isPhone ? 8 : 10,
                       ),
                       decoration: BoxDecoration(
-                        color: HomeColors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Visit now →',
+                        AppStrings.visitNow,
                         style: TextStyle(
-                          color: HomeColors.primary,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                           fontSize: r.captionFontSize,
                         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'export_allthings.dart';
+
 class PromoBanner extends StatefulWidget {
   const PromoBanner({super.key});
 
@@ -13,32 +14,24 @@ class _PromoBannerState extends State<PromoBanner> {
 
   static const _slides = [
     _Slide(
-      headline: '50–40% OFF',
-      sub: 'Now in (product)\nAll colours',
-      cta: 'Shop Now',
-      gradient: HomeColors.promoBannerGradient,
+      headline: AppStrings.promosFiftyFortyOff,
+      sub: AppStrings.promosNowInProducts,
+      cta: AppStrings.shopNow,
+      gradient: AppColors.promoBannerGradient,
       icon: Icons.shopping_bag_rounded,
     ),
     _Slide(
-      headline: 'New Arrivals',
-      sub: "Summer '25\nFresh Collections",
-      cta: 'Explore',
-      gradient: LinearGradient(
-        colors: [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ),
+      headline: AppStrings.newArrivals,
+      sub: AppStrings.promosSummerFresh,
+      cta: AppStrings.explore,
+      gradient: AppColors.promoNewArrivalsGradient,
       icon: Icons.auto_awesome_rounded,
     ),
     _Slide(
-      headline: 'Flash Sale',
-      sub: 'Limited time\nUp to 70% off',
-      cta: 'Grab Now',
-      gradient: LinearGradient(
-        colors: [Color(0xFFEF6C00), Color(0xFFFF9800)],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ),
+      headline: AppStrings.flashSale,
+      sub: AppStrings.promosFlashSale,
+      cta: AppStrings.grabNow,
+      gradient: AppColors.promoFlashSaleGradient,
       icon: Icons.bolt_rounded,
     ),
   ];
@@ -76,8 +69,8 @@ class _PromoBannerState extends State<PromoBanner> {
               height: 6,
               decoration: BoxDecoration(
                 color: _page == i
-                    ? HomeColors.primary
-                    : HomeColors.primary.withOpacity(0.3),
+                    ? AppColors.primary
+                    : AppColors.primary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -113,7 +106,7 @@ class _SlideWidget extends StatelessWidget {
                   Text(
                     slide.headline,
                     style: TextStyle(
-                      color: HomeColors.white,
+                      color: AppColors.white,
                       fontSize: r.isPhone ? 24 : 30,
                       fontWeight: FontWeight.w900,
                       height: 1.1,
@@ -123,7 +116,7 @@ class _SlideWidget extends StatelessWidget {
                   Text(
                     slide.sub,
                     style: TextStyle(
-                      color: HomeColors.white.withOpacity(0.88),
+                      color: AppColors.white.withValues(alpha: 0.88),
                       fontSize: r.captionFontSize,
                       height: 1.4,
                     ),
@@ -137,7 +130,7 @@ class _SlideWidget extends StatelessWidget {
                         vertical: r.isPhone ? 8 : 10,
                       ),
                       decoration: BoxDecoration(
-                        color: HomeColors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -146,14 +139,14 @@ class _SlideWidget extends StatelessWidget {
                           Text(
                             slide.cta,
                             style: TextStyle(
-                              color: HomeColors.primary,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                               fontSize: r.captionFontSize,
                             ),
                           ),
                           const SizedBox(width: 4),
                           const Icon(Icons.arrow_forward_rounded,
-                              color: HomeColors.primary, size: 14),
+                              color: AppColors.primary, size: 14),
                         ],
                       ),
                     ),
@@ -165,12 +158,12 @@ class _SlideWidget extends StatelessWidget {
               width: r.isPhone ? 80 : 110,
               height: r.isPhone ? 80 : 110,
               decoration: BoxDecoration(
-                color: HomeColors.white.withOpacity(0.18),
+                color: AppColors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 slide.icon,
-                color: HomeColors.white,
+                color: AppColors.white,
                 size: r.isPhone ? 40 : 52,
               ),
             ),

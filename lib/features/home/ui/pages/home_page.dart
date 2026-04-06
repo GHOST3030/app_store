@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/features/categories/ui/pages/categories_page.dart';
+import 'package:new_auth/features/home/ui/widgets/filter_and_sort_buttoms.dart';
 
-import '../../logic/product_providers.dart';
-import '../../logic/product_state.dart';
-import '../widgets/export_allthings.dart';
+import '../../../product/logic/product_providers.dart';
+import '../../../product/logic/product_state.dart';
+import '../../../product/ui/widgets/export_allthings.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -36,14 +38,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // ── FIX 4: Error listeners ──────────────────────────────────────────────
-
-    // Handle AsyncError from main provider (full-page load / reload failures)
+    // Handle AsyncError from main provider
     ref.listen(productNotifierProvider, (prev, next) {
       if (next is AsyncError) {
         _showErrorSnackBar(
           context,
-          'Failed to load products: ${next.error}',
+          '${AppStrings.failedToLoadProducts} ${next.failure ?? ''}',
           retry: () => ref.read(productNotifierProvider.notifier).refresh(),
         );
       }
@@ -53,9 +53,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.listen(productFailureProvider, (prev, next) {
       if (next != null && prev != next) {
         final message = switch (next) {
-          NetworkFailure() => 'Network error — check your connection',
-          ServerFailure()  => 'Server error — please try again later',
-          UnknownFailure() => next.message ?? 'Something went wrong',
+          NetworkFailure() => AppStrings.networkError,
+          ServerFailure() => AppStrings.serverError,
+          UnknownFailure() => next.message ?? AppStrings.unknownFailure,
         };
         _showErrorSnackBar(
           context,
@@ -66,7 +66,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
-      backgroundColor: HomeColors.white,
+      backgroundColor: AppColors.white,
       appBar: const HomeAppBar(),
       body: Homewidget(context: context, ref: ref, scroll: _scroll),
       bottomNavigationBar: HomeBottomNav(
@@ -89,8 +89,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         duration: const Duration(seconds: 4),
         action: retry != null
             ? SnackBarAction(
-                label: 'RETRY',
-                textColor: HomeColors.white,
+                label: AppStrings.retry,
+                textColor: AppColors.white,
                 onPressed: retry,
               )
             : null,
@@ -116,7 +116,7 @@ class Homewidget extends StatelessWidget {
     final r = HomeResponsive.of(context);
 
     return RefreshIndicator(
-      color: HomeColors.primary,
+      color: AppColors.primary,
       onRefresh: () => ref.read(productNotifierProvider.notifier).refresh(),
       child: CustomScrollView(
         controller: _scroll,
@@ -138,49 +138,29 @@ class Homewidget extends StatelessWidget {
 
                 SizedBox(height: r.sectionGap * 0.75),
 
-                // Categories + Sort/Filter
+                //  Sort/Filter
+                FilterAndSortButtoms(),
+                SizedBox(height: r.sectionGap),
+
+                //Categories
                 const CategoriesSection(),
-
                 SizedBox(height: r.sectionGap),
 
-                // // Promo carousel
-                const PromoBanner(),
-
+                // Promo carousel
+                //   const PromoBanner(),
                 SizedBox(height: r.sectionGap),
 
-                // // Deal of the Day
+                // Deal of the Day
                 const DealOfTheDaySection(),
 
-                SizedBox(height: r.sectionGap),
+                // SizedBox(height: r.sectionGap),
 
-                // Special offers banner
-                 const SpecialOffersBanner(),
-                 SizedBox(height: r.isPhone ? 14 : 18),
+                // // Special offers banner
+                // const SpecialOffersBanner(),
+                // SizedBox(height: r.isPhone ? 14 : 18),
 
                 // // Flat & Heels banner
-                 const FlatAndHeelsBanner(),
-
-                // SizedBox(height: r.sectionGap),
-
-                // // Trending products grid
-                // const TrendingProductsSection(),
-
-                // SizedBox(height: r.sectionGap),
-
-                // // Hot Summer Sale
-                // const HotSummerSaleBanner(),
-
-                // SizedBox(height: r.sectionGap),
-
-                // // New Arrivals (featured products)
-                // const NewArrivalsSection(),
-
-                // SizedBox(height: r.sectionGap),
-
-                // // Sponsored
-                // const SponsoredBanner(),
-
-                // SizedBox(height: r.sectionGap + 8),
+                // const FlatAndHeelsBanner(),
               ],
             ),
           ),

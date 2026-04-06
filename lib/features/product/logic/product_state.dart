@@ -21,60 +21,53 @@ final class UnknownFailure extends ProductFailure {
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
+enum ProductStatus { idle, loading, loadingMore, success, failure }
 
 class ProductState {
+  final ProductStatus status;
   final List<ProductModel> products;
   final List<ProductModel> featuredProducts;
   final ProductQuery query;
   final bool hasMore;
-  final bool isLoadingMore;
+  final String? cursor;
   final ProductFailure? failure;
 
-  /// ISO-8601 `createdAt` of the last loaded product — used for cursor
-  /// pagination when sort is `createdAt DESC` (default).
-  final String? cursor;
-
-  /// Number of items loaded — used for offset pagination when sort is
-  /// any field other than `createdAt`.
-  final int offset;
-
   const ProductState({
+    this.status = ProductStatus.idle,
     this.products = const [],
-    this.featuredProducts = const [],
     this.query = const ProductQuery(),
     this.hasMore = true,
-    this.isLoadingMore = false,
-    this.failure,
     this.cursor,
-    this.offset = 0,
+    this.failure, 
+     this.featuredProducts=const [],
   });
 
-  /// True when the default sort is active (createdAt DESC) and cursor
-  /// pagination should be used. False → offset pagination.
-  bool get usesCursorPagination =>
-      query.sortBy == null || query.sortBy == ProductSortField.createdAt;
-
   ProductState copyWith({
+    ProductStatus? status,
     List<ProductModel>? products,
     List<ProductModel>? featuredProducts,
     ProductQuery? query,
     bool? hasMore,
-    bool? isLoadingMore,
-    ProductFailure? failure,
     String? cursor,
-    int? offset,
+    ProductFailure? failure,
     bool clearFailure = false,
     bool clearCursor = false,
   }) {
     return ProductState(
+      status: status ?? this.status,
       products: products ?? this.products,
-      featuredProducts: featuredProducts ?? this.featuredProducts,
+      featuredProducts:featuredProducts ?? this.featuredProducts,
       query: query ?? this.query,
       hasMore: hasMore ?? this.hasMore,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      failure: clearFailure ? null : failure ?? this.failure,
-      cursor: clearCursor ? null : cursor ?? this.cursor,
-      offset: offset ?? this.offset,
+      cursor: clearCursor ? null : (cursor ?? this.cursor),
+      failure: clearFailure ? null : (failure ?? this.failure),
+    
     );
   }
+
+  bool get isLoading => status == ProductStatus.loading;
+  bool get isLoadingMore => status == ProductStatus.loadingMore;
+  bool get isError => status == ProductStatus.failure;
+  bool get isSuccess => status == ProductStatus.success;
+  bool get isEmpty => products.isEmpty;
 }
