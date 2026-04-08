@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/product_model.dart';
 import '../../logic/product_providers.dart';
 import 'export_allthings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'product_card.dart';
 
 class TrendingProductsSection extends ConsumerWidget {
@@ -44,7 +45,7 @@ class TrendingProductsSection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.trendingProducts,
+                        context.l10n.trendingProducts,
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: r.bodyFontSize,
@@ -52,7 +53,7 @@ class TrendingProductsSection extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        AppStrings.lastDate,
+                        context.l10n.lastDate,
                         style: TextStyle(
                           color: AppColors.white.withValues(alpha: 0.85),
                           fontSize: r.captionFontSize,
@@ -66,7 +67,7 @@ class TrendingProductsSection extends ConsumerWidget {
                   child: Row(
                     children: [
                       Text(
-                        AppStrings.viewAll,
+                        context.l10n.viewAll,
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: r.captionFontSize,
@@ -123,11 +124,11 @@ class Buildcontent extends StatelessWidget {
     }
 
     if (products.isEmpty) {
-      return const SizedBox(
+      return  SizedBox(
         height: 80,
         child: Center(
           child: Text(
-            AppStrings.noProducts,
+            ctx.l10n.noProducts,
             style: TextStyle(color: AppColors.textMid),
           ),
         ),
@@ -181,8 +182,8 @@ class Buildcontent extends StatelessWidget {
                       ),
                       onPressed: () =>
                           ref.read(productNotifierProvider.notifier).loadMore(),
-                      child: const Text(
-                        AppStrings.loadMore,
+                      child: Text(
+                        ctx.l10n.loadMore,
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,

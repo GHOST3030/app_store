@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'export_allthings.dart';
 
 class PromoBanner extends StatefulWidget {
@@ -12,29 +13,30 @@ class _PromoBannerState extends State<PromoBanner> {
   int _page = 0;
   final _ctrl = PageController();
 
-  static const _slides = [
+  List<_Slide> _getSlides(BuildContext context) => [
     _Slide(
-      headline: AppStrings.promosFiftyFortyOff,
-      sub: AppStrings.promosNowInProducts,
-      cta: AppStrings.shopNow,
+      headline: context.l10n.promosFiftyFortyOff,
+      sub: context.l10n.promosNowInProducts,
+      cta: context.l10n.shopNow,
       gradient: AppColors.promoBannerGradient,
       icon: Icons.shopping_bag_rounded,
     ),
     _Slide(
-      headline: AppStrings.newArrivals,
-      sub: AppStrings.promosSummerFresh,
-      cta: AppStrings.explore,
+      headline: context.l10n.newArrivals,
+      sub: context.l10n.promosSummerFresh,
+      cta: context.l10n.explore,
       gradient: AppColors.promoNewArrivalsGradient,
       icon: Icons.auto_awesome_rounded,
     ),
     _Slide(
-      headline: AppStrings.flashSale,
-      sub: AppStrings.promosFlashSale,
-      cta: AppStrings.grabNow,
+      headline: context.l10n.flashSale,
+      sub: context.l10n.promosFlashSale,
+      cta: context.l10n.grabNow,
       gradient: AppColors.promoFlashSaleGradient,
       icon: Icons.bolt_rounded,
     ),
   ];
+
 
   @override
   void dispose() {
@@ -46,22 +48,24 @@ class _PromoBannerState extends State<PromoBanner> {
   Widget build(BuildContext context) {
     final r = HomeResponsive.of(context);
 
+    final slides = _getSlides(context);
+
     return Column(
       children: [
         SizedBox(
           height: r.promoBannerHeight,
           child: PageView.builder(
             controller: _ctrl,
-            itemCount: _slides.length,
+            itemCount: slides.length,
             onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (_, i) => _SlideWidget(slide: _slides[i], r: r),
+            itemBuilder: (_, i) => _SlideWidget(slide: slides[i], r: r),
           ),
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            _slides.length,
+            slides.length,
             (i) => AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               margin: const EdgeInsets.symmetric(horizontal: 3),

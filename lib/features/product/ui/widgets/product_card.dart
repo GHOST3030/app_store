@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/features/product/data/product_model.dart';
 import 'export_allthings.dart';
 
@@ -73,7 +74,7 @@ class ProductCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$pct% ${AppStrings.off}',
+                        '$pct% ${context.l10n.off}',
                         style: const TextStyle(
                           color: AppColors.white,
                           fontSize: 9,
@@ -134,7 +135,7 @@ class ProductCard extends StatelessWidget {
                       const Spacer(),
                       if (product.stock == 0)
                         Text(
-                          AppStrings.outOfStockShort,
+                          context.l10n.outOfStockShort,
                           style: TextStyle(
                               fontSize: r.captionFontSize - 1,
                               color: AppColors.badge,

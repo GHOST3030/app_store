@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/features/product/data/product_model.dart';
 
@@ -72,7 +72,7 @@ class ProductDealCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$discountPct% ${AppStrings.off}',
+                        '$discountPct% ${context.l10n.off}',
                         style: const TextStyle(
                           color: AppColors.white,
                           fontSize: 10,
@@ -135,9 +135,9 @@ class ProductDealCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       if (product.stock == 0)
-                        const Text(
-                          AppStrings.outOfStock,
-                          style: TextStyle(
+                        Text(
+                          context.l10n.outOfStock,
+                          style: const TextStyle(
                               fontSize: 9,
                               color: AppColors.badge,
                               fontWeight: FontWeight.w600),

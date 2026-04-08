@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import '../../../product/ui/widgets/export_allthings.dart';
 
 class HomeBottomNav extends StatelessWidget {
@@ -11,17 +12,17 @@ class HomeBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  static const _items = [
-    (icon: Icons.home_rounded, label: AppStrings.home),
-    (icon: Icons.favorite_border_rounded, label: AppStrings.wishlist),
-    (icon: Icons.shopping_cart_outlined, label: AppStrings.cart),
-    (icon: Icons.search_rounded, label: AppStrings.search),
-    (icon: Icons.settings_outlined, label: AppStrings.setting),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final r = HomeResponsive.of(context);
+    final items = [
+      (icon: Icons.home_rounded, label: context.l10n.home),
+      (icon: Icons.favorite_border_rounded, label: context.l10n.wishlist),
+      (icon: Icons.shopping_cart_outlined, label: context.l10n.cart),
+      (icon: Icons.search_rounded, label: context.l10n.search),
+      (icon: Icons.settings_outlined, label: context.l10n.setting),
+    ];
+
     return Container(
       height: r.bottomNavHeight,
       decoration: BoxDecoration(
@@ -37,10 +38,10 @@ class HomeBottomNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(
-          _items.length,
+          items.length,
           (i) => _NavBtn(
-            icon: _items[i].icon,
-            label: _items[i].label,
+            icon: items[i].icon,
+            label: items[i].label,
             selected: currentIndex == i,
             onTap: () => onTap(i),
             r: r,

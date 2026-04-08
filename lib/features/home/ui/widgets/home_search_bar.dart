@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import '../../../product/logic/product_providers.dart';
 import '../../../product/ui/widgets/export_allthings.dart';
 
@@ -37,7 +38,7 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
         decoration: InputDecoration(
           filled: true,
           fillColor: AppColors.bgGrey,
-          hintText: AppStrings.searchHint,
+          hintText: context.l10n.searchHint,
           hintStyle: TextStyle(color: AppColors.textMid, fontSize: r.bodyFontSize),
           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMid, size: 22),
           suffixIcon: Row(

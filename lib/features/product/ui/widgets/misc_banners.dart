@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'export_allthings.dart';
 
 class HotSummerSaleBanner extends StatelessWidget {
@@ -53,7 +54,7 @@ class HotSummerSaleBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.hotSummerSale,
+                        context.l10n.hotSummerSale,
                         style: TextStyle(
                           fontSize: r.titleFontSize,
                           fontWeight: FontWeight.w900,
@@ -62,7 +63,7 @@ class HotSummerSaleBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        AppStrings.specialOffers,
+                        context.l10n.specialOffers,
                         style: TextStyle(
                           fontSize: r.captionFontSize,
                           color: AppColors.summerSaleSub,
@@ -83,7 +84,7 @@ class HotSummerSaleBanner extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            AppStrings.exploreDeals,
+                            context.l10n.exploreDeals,
                             style: TextStyle(
                               color: AppColors.white,
                               fontSize: r.captionFontSize,
@@ -116,7 +117,7 @@ class SponsoredBanner extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: r.hPad),
           child: Text(
-            AppStrings.sponsored,
+            context.l10n.sponsored,
             style: TextStyle(
               fontSize: r.titleFontSize,
               fontWeight: FontWeight.w700,
@@ -138,7 +139,7 @@ class SponsoredBanner extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    AppStrings.upTo,
+                    context.l10n.upTo,
                     style: TextStyle(
                       color: AppColors.white.withValues(alpha: 0.6),
                       fontSize: r.captionFontSize,
@@ -147,7 +148,7 @@ class SponsoredBanner extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    AppStrings.fiftyPercentOff,
+                    context.l10n.fiftyPercentOff,
                     style: TextStyle(
                       color: AppColors.white,
                       fontSize: r.isPhone ? 38 : 50,
@@ -168,7 +169,7 @@ class SponsoredBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        AppStrings.upToFiftyPercentOff,
+                        context.l10n.upToFiftyPercentOff,
                         style: TextStyle(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w700,

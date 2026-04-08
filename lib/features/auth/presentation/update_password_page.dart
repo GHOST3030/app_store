@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import '../logic/providers_auth.dart';
 
@@ -33,7 +33,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   Future<void> _updatePassword() async {
     final password = _passwordController.text.trim();
     if (password.isEmpty || password.length < 6) {
-      _showMessage(AppStrings.passwordMustBeAtLeast6, isError: true);
+      _showMessage(context.l10n.passwordMustBeAtLeast6, isError: true);
       return;
     }
 
@@ -45,7 +45,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
       if (authState.hasError) {
         _showMessage(authState.error.toString(), isError: true);
       } else {
-        _showMessage(AppStrings.passwordSuccessfully);
+        _showMessage(context.l10n.passwordSuccessfully);
         
         await ref.read(authControllerProvider.notifier).logout();
       }
@@ -57,7 +57,7 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.updatePassword)),
+      appBar: AppBar(title: Text(context.l10n.updatePassword)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -66,31 +66,31 @@ class _UpdatePasswordPageState extends ConsumerState<UpdatePasswordPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                AppStrings.setNewPassword,
+                context.l10n.setNewPassword,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
-                AppStrings.enterYourNewPassword,
+              Text(
+                context.l10n.enterYourNewPassword,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: AppStrings.newPassword,
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                decoration: InputDecoration(
+                  labelText: context.l10n.newPassword,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _updatePassword,
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text(AppStrings.updatePassword, style: TextStyle(fontSize: 16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(context.l10n.updatePassword, style: const TextStyle(fontSize: 16)),
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:new_auth/features/categories/ui/pages/categories_page.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/features/home/ui/widgets/filter_and_sort_buttoms.dart';
 
 import '../../../product/logic/product_providers.dart';
@@ -43,7 +44,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (next is AsyncError) {
         _showErrorSnackBar(
           context,
-          '${AppStrings.failedToLoadProducts} ${next.failure ?? ''}',
+          '${context.l10n.failedToLoadProducts} ${next.failure ?? ''}',
           retry: () => ref.read(productNotifierProvider.notifier).refresh(),
         );
       }
@@ -53,9 +54,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.listen(productFailureProvider, (prev, next) {
       if (next != null && prev != next) {
         final message = switch (next) {
-          NetworkFailure() => AppStrings.networkError,
-          ServerFailure() => AppStrings.serverError,
-          UnknownFailure() => next.message ?? AppStrings.unknownFailure,
+          NetworkFailure() => context.l10n.networkError,
+          ServerFailure() => context.l10n.serverError,
+          UnknownFailure() => next.message ?? context.l10n.unknownFailure,
         };
         _showErrorSnackBar(
           context,
@@ -89,7 +90,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         duration: const Duration(seconds: 4),
         action: retry != null
             ? SnackBarAction(
-                label: AppStrings.retry,
+                label: context.l10n.retry,
                 textColor: AppColors.white,
                 onPressed: retry,
               )

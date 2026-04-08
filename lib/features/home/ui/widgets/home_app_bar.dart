@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
+import 'package:new_auth/core/localization/language_provider.dart';
 import '../../../product/ui/widgets/export_allthings.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -34,9 +37,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Text(
-            AppStrings.brandName,
-            style: TextStyle(
+          Text(
+            context.l10n.brandName,
+            style: const TextStyle(
               color: AppColors.textDark,
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -47,6 +50,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
+        const LanguageDropdown(),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: GestureDetector(
@@ -61,6 +65,35 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class LanguageDropdown extends ConsumerWidget {
+  const LanguageDropdown({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(languageProvider);
+
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.language_rounded, color: AppColors.textDark, size: 24),
+      initialValue: locale.languageCode,
+      color: AppColors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: (value) {
+        ref.read(languageProvider.notifier).changeLanguage(value);
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'en',
+          child: Text('English', style: TextStyle(fontWeight: FontWeight.w600)),
+        ),
+        const PopupMenuItem(
+          value: 'ar',
+          child: Text('العربية', style: TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     );

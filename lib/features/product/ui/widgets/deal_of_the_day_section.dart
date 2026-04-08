@@ -1,9 +1,8 @@
-
-
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import '../../logic/deal_timer_notifier.dart';
 import '../../logic/product_providers.dart';
 import 'export_allthings.dart';
@@ -44,7 +43,7 @@ class DealOfTheDaySection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.dealOfTheDay,
+                        context.l10n.dealOfTheDay,
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: r.bodyFontSize,
@@ -60,7 +59,7 @@ class DealOfTheDaySection extends ConsumerWidget {
                   child: Row(
                     children: [
                       Text(
-                        AppStrings.viewAll,
+                        context.l10n.viewAll,
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: r.captionFontSize,
@@ -151,10 +150,10 @@ class _ProductList extends ConsumerState<ProductlistView> {
     }
 
     if (products.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          AppStrings.noDealsRightNow,
-          style: TextStyle(color: AppColors.textMid),
+          context.l10n.noDealsRightNow,
+          style: const TextStyle(color: AppColors.textMid),
         ),
       );
     }

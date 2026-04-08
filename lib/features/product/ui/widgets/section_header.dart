@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'export_allthings.dart';
 
 class SectionHeader extends StatelessWidget {
@@ -42,7 +43,7 @@ class SectionHeader extends StatelessWidget {
           if (onViewAll != null)
             Semantics(
               button: true,
-              label: AppStrings.viewAll,
+              label: context.l10n.viewAll,
               child: InkWell(
                 onTap: onViewAll,
                 borderRadius: BorderRadius.circular(20),
@@ -58,7 +59,7 @@ class SectionHeader extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        AppStrings.viewAll,
+                        context.l10n.viewAll,
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: r.captionFontSize,

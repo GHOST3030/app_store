@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/entities/app_user.dart';
@@ -61,7 +61,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               const SizedBox(height: 24),
               Text(
-                AppStrings.welcomeBack,
+                context.l10n.welcomeBack,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.black,
@@ -73,7 +73,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               // Email Field
               _AuthInputField(
                 controller: _emailController,
-                hintText: AppStrings.usernameOrEmail,
+                hintText: context.l10n.usernameOrEmail,
                 prefixIcon: Icons.person,
                 enabled: !isLoading,
               ),
@@ -82,7 +82,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               // Password Field
               _AuthInputField(
                 controller: _passwordController,
-                hintText: AppStrings.password,
+                hintText: context.l10n.password,
                 prefixIcon: Icons.lock,
                 suffixIcon: Icons.visibility,
                 obscureText: true,
@@ -101,9 +101,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    AppStrings.forgotPasswordAsk,
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.forgotPasswordAsk,
+                    style: const TextStyle(
                       color: AppColors.authAccent,
                       fontWeight: FontWeight.w500,
                     ),
@@ -135,7 +135,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           .read(authControllerProvider.notifier)
                           .login(emailToUse, password);
                     } else {
-                      _showError(AppStrings.pleaseFillInAllFields);
+                      _showError(context.l10n.pleaseFillInAllFields);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -147,20 +147,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    AppStrings.login,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  child: Text(
+                    context.l10n.login,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
 
               const SizedBox(height: 48),
 
               // Social Login OR Divider
-              const Align(
+              Align(
                 alignment: Alignment.center,
                 child: Text(
-                  AppStrings.orContinueWith,
-                  style: TextStyle(
+                  context.l10n.orContinueWith,
+                  style: const TextStyle(
                     color: AppColors.textMid,
                     fontWeight: FontWeight.w500,
                   ),
@@ -211,18 +211,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    AppStrings.createAnAccountText,
-                    style: TextStyle(
+                  Text(
+                    context.l10n.createAnAccountText,
+                    style: const TextStyle(
                       color: AppColors.textMid,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => context.go('/signup'),
-                    child: const Text(
-                      AppStrings.signUp,
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.signUp,
+                      style: const TextStyle(
                         color: AppColors.authAccent,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'export_allthings.dart';
 
 class SpecialOffersBanner extends StatelessWidget {
@@ -40,7 +41,7 @@ class SpecialOffersBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppStrings.specialOffersFire,
+                    context.l10n.specialOffersFire,
                     style: TextStyle(
                       fontSize: r.bodyFontSize,
                       fontWeight: FontWeight.w700,
@@ -49,7 +50,7 @@ class SpecialOffersBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    AppStrings.offerAtBestPrices,
+                    context.l10n.offerAtBestPrices,
                     style: TextStyle(
                       fontSize: r.captionFontSize,
                       color: AppColors.textMid,
@@ -118,7 +119,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          AppStrings.flatAndHeels,
+                          context.l10n.flatAndHeels,
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: r.titleFontSize,
@@ -127,7 +128,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          AppStrings.standAChanceToBeRewarded,
+                          context.l10n.standAChanceToBeRewarded,
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: r.captionFontSize,
@@ -148,7 +149,7 @@ class FlatAndHeelsBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        AppStrings.visitNow,
+                        context.l10n.visitNow,
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,

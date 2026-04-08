@@ -1,5 +1,4 @@
 export 'package:new_auth/core/theme/app_colors.dart';
-export 'package:new_auth/core/constants/app_strings.dart';
 export '../../../home/ui/widgets/home_app_bar.dart';
 export '../../../home/ui/widgets/home_responsive.dart';
 export 'deal_of_the_day_section.dart';

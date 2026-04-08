@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/features/home/ui/widgets/filtersheet/filter_sheet.dart';
 import 'package:new_auth/features/home/ui/widgets/home_responsive.dart';
@@ -17,7 +17,7 @@ class FilterAndSortButtoms extends ConsumerWidget {
       child: Row(
         children: [
           Text(
-            AppStrings.allFeatured,
+            context.l10n.allFeatured,
             style: TextStyle(
               fontSize: r.titleFontSize,
               fontWeight: FontWeight.w700,
@@ -27,13 +27,13 @@ class FilterAndSortButtoms extends ConsumerWidget {
           const Spacer(),
           _Chip(
             icon: Icons.sort_rounded,
-            label: AppStrings.sort,
+            label: context.l10n.sort,
             onTap: () => _sortSheet(context, ref),
           ),
           const SizedBox(width: 8),
           _Chip(
             icon: Icons.filter_list_rounded,
-            label: AppStrings.filter,
+            label: context.l10n.filter,
             onTap: () => _filterSheet(context, ref),
           ),
         ],

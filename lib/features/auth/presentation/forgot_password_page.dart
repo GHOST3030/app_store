@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
@@ -51,9 +51,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             children: [
               const SizedBox(height: 40),
               // Big Bold Header
-              const Text(
-                AppStrings.forgetPassword,
-                style: TextStyle(
+              Text(
+                context.l10n.forgetPassword,
+                style: const TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
                   color: AppColors.black,
@@ -71,10 +71,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 child: TextField(
                   controller: _emailController,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    hintText: AppStrings.enterYourEmailAddress,
-                    hintStyle: TextStyle(color: AppColors.textMid),
-                    prefixIcon: Icon(
+                  decoration: InputDecoration(
+                    hintText: context.l10n.enterYourEmailAddress,
+                    hintStyle: const TextStyle(color: AppColors.textMid),
+                    prefixIcon: const Icon(
                       Icons.email_outlined,
                       color: AppColors.textDark,
                     ),
@@ -86,13 +86,13 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               const SizedBox(height: 20),
               // Subtext with Asterisk
               RichText(
-                text: const TextSpan(
+                text: TextSpan(
                   text: '* ',
-                  style: TextStyle(color: AppColors.error, fontSize: 14),
+                  style: const TextStyle(color: AppColors.error, fontSize: 14),
                   children: [
                     TextSpan(
-                      text: AppStrings.willSendMessageToSetPassword,
-                      style: TextStyle(color: AppColors.textMid, fontSize: 14),
+                      text: context.l10n.willSendMessageToSetPassword,
+                      style: const TextStyle(color: AppColors.textMid, fontSize: 14),
                     ),
                   ],
                 ),
@@ -112,14 +112,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 .read(authControllerProvider.notifier)
                                 .resetPassword(
                                   email,
-                                  redirectTo: AppStrings.supabaseUriResetPassword,
+                                  redirectTo: context.l10n.supabaseUriResetPassword,
                                 );
                             if (context.mounted) {
-                              _showMessage(AppStrings.resetInstructionsSent);
+                              _showMessage(context.l10n.resetInstructionsSent);
                             }
                           } else {
                             _showMessage(
-                              AppStrings.pleaseEnterYourEmail,
+                              context.l10n.pleaseEnterYourEmail,
                               isError: true,
                             );
                           }
@@ -134,9 +134,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   ),
                   child: isLoading
                       ? const CircularProgressIndicator(color: AppColors.white)
-                      : const Text(
-                          AppStrings.submit,
-                          style: TextStyle(
+                      : Text(
+                          context.l10n.submit,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
                           ),

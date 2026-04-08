@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/features/product/logic/product_providers.dart';
 import 'package:new_auth/features/home/ui/widgets/home_responsive.dart';
@@ -15,17 +15,17 @@ class _Cat {
   const _Cat(this.label, this.icon, this.color, this.id);
 }
 
-const _cats = [
+List<_Cat> _getCats(BuildContext context) => [
   _Cat(
-    AppStrings.beauty,
+    context.l10n.beauty,
     Icons.face_retouching_natural,
     AppColors.catBeauty,
     1,
   ),
-  _Cat(AppStrings.fashion, Icons.checkroom_rounded, AppColors.catFashion, 2),
-  _Cat(AppStrings.kids, Icons.child_care_rounded, AppColors.catKids, 3),
-  _Cat(AppStrings.mens, Icons.man_rounded, AppColors.catMens, 4),
-  _Cat(AppStrings.womens, Icons.woman_rounded, AppColors.catWomens, 5),
+  _Cat(context.l10n.fashion, Icons.checkroom_rounded, AppColors.catFashion, 2),
+  _Cat(context.l10n.kids, Icons.child_care_rounded, AppColors.catKids, 3),
+  _Cat(context.l10n.mens, Icons.man_rounded, AppColors.catMens, 4),
+  _Cat(context.l10n.womens, Icons.woman_rounded, AppColors.catWomens, 5),
 ];
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
@@ -37,6 +37,7 @@ class CategoriesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final r = HomeResponsive.of(context);
     final selectedId = ref.watch(productQueryProvider).categoryId;
+    final cats = _getCats(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,10 +53,10 @@ class CategoriesSection extends ConsumerWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: r.hPad),
-            itemCount: _cats.length,
+            itemCount: cats.length,
             separatorBuilder: (_, __) => SizedBox(width: r.categorySpacing),
             itemBuilder: (_, i) {
-              final cat = _cats[i];
+              final cat = cats[i];
               final selected = selectedId == cat.id.toString();
               return GestureDetector(
                 onTap: () {

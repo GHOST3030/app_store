@@ -12,7 +12,7 @@ class HomeResponsive {
 
   final double _width;
   final double _height;
-
+  
   // ── Breakpoints ──────────────────────────────────────────────────────────
   bool get isPhone => _width < 600;
   bool get isTablet => _width >= 600 && _width < 900;
@@ -31,7 +31,7 @@ class HomeResponsive {
     if (isTablet) return _width * 0.28;
     return _width * 0.20;
   }
-
+  //double get cardHeight => _height * 1.4;
   double get cardImageHeight => cardWidth * 0.75;
 
   /// Grid card aspect ratio (w/h)
@@ -53,7 +53,7 @@ class HomeResponsive {
   double get bodyFontSize => isPhone ? 13.0 : 14.0;
   double get captionFontSize => isPhone ? 11.0 : 12.0;
   double get priceFontSize => isPhone ? 14.0 : 15.0;
-
+ 
   // ── Category bubble ───────────────────────────────────────────────────────
   double get categoryBubbleSize => isPhone ? 56.0 : 68.0;
   double get categoryIconSize => isPhone ? 24.0 : 28.0;

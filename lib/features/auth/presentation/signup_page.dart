@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:new_auth/core/constants/app_strings.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
@@ -59,7 +59,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             children: [
               const SizedBox(height: 24),
               Text(
-                AppStrings.createAnAccount,
+                context.l10n.createAnAccount,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.black,
@@ -71,7 +71,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               // Email Field
               _SignupInputField(
                 controller: _emailController,
-                hintText: AppStrings.usernameOrEmail,
+                hintText: context.l10n.usernameOrEmail,
                 prefixIcon: Icons.person,
                 enabled: !isLoading,
               ),
@@ -80,7 +80,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               // Password Field
               _SignupInputField(
                 controller: _passwordController,
-                hintText: AppStrings.password,
+                hintText: context.l10n.password,
                 prefixIcon: Icons.lock,
                 suffixIcon: Icons.visibility,
                 obscureText: true,
@@ -91,7 +91,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               // Confirm Password Field
               _SignupInputField(
                 controller: _confirmPasswordController,
-                hintText: AppStrings.confirmPassword,
+                hintText: context.l10n.confirmPassword,
                 prefixIcon: Icons.lock,
                 suffixIcon: Icons.visibility,
                 obscureText: true,
@@ -102,12 +102,12 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               // Terms and Conditions text
               RichText(
-                text: const TextSpan(
-                  style: TextStyle(color: AppColors.textMid, fontSize: 13, height: 1.5),
+                text: TextSpan(
+                  style: const TextStyle(color: AppColors.textMid, fontSize: 13, height: 1.5),
                   children: [
-                    TextSpan(text: AppStrings.byClickingThe),
-                    TextSpan(text: AppStrings.register, style: TextStyle(color: AppColors.authAccent)),
-                    TextSpan(text: AppStrings.agreeToPublicOffer),
+                    TextSpan(text: context.l10n.byClickingThe),
+                    TextSpan(text: context.l10n.register, style: const TextStyle(color: AppColors.authAccent)),
+                    TextSpan(text: context.l10n.agreeToPublicOffer),
                   ],
                 ),
               ),
@@ -125,9 +125,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     final confirmPassword = _confirmPasswordController.text.trim();
                     
                     if (usernameOrEmail.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-                      _showError(AppStrings.pleaseFillInAllFields);
+                      _showError(context.l10n.pleaseFillInAllFields);
                     } else if (password != confirmPassword) {
-                      _showError(AppStrings.passwordsDoNotMatch);
+                      _showError(context.l10n.passwordsDoNotMatch);
                     } else {
                       final isEmail = usernameOrEmail.contains('@') && usernameOrEmail.contains('.');
                       
@@ -143,7 +143,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       final currentState = ref.read(authControllerProvider);
                       if (!currentState.hasError) {
                          if (currentState.value == null) {
-                           _showSuccess(AppStrings.verifyAccountToLogin);
+                           _showSuccess(context.l10n.verifyAccountToLogin);
                            context.go('/login');
                          }
                       }
@@ -158,8 +158,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    AppStrings.createAccount,
+                  child: Text(
+                    context.l10n.createAccount,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -170,11 +170,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               const SizedBox(height: 48),
 
               // Social Login OR Divider
-              const Align(
+              Align(
                 alignment: Alignment.center,
                 child: Text(
-                  AppStrings.orContinueWith,
-                  style: TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
+                  context.l10n.orContinueWith,
+                  style: const TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
                 ),
               ),
 
@@ -216,15 +216,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    AppStrings.iAlreadyHaveAnAccount,
-                    style: TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
+                  Text(
+                    context.l10n.iAlreadyHaveAnAccount,
+                    style: const TextStyle(color: AppColors.textMid, fontWeight: FontWeight.w500),
                   ),
                   GestureDetector(
                     onTap: () => context.go('/login'),
-                    child: const Text(
-                      AppStrings.login,
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.login,
+                      style: const TextStyle(
                         color: AppColors.authAccent,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,

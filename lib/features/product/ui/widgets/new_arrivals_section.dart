@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_auth/core/extensions/l10n_extension.dart';
 import '../../logic/product_providers.dart';
 import 'export_allthings.dart';
 import 'product_card.dart';
@@ -17,17 +18,17 @@ class NewArrivalsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: AppStrings.newArrivals,
-          subtitle: AppStrings.summerCollections,
+          title: context.l10n.newArrivals,
+          subtitle: context.l10n.summerCollections,
           onViewAll: () {},
         ),
         SizedBox(height: r.isPhone ? 14 : 18),
         if (featured.isEmpty)
-          const SizedBox(
+           SizedBox(
             height: 60,
             child: Center(
-              child: Text(AppStrings.noNewArrivals,
-                  style: TextStyle(color: AppColors.textMid)),
+              child: Text(context.l10n.noNewArrivals,
+                  style: const TextStyle(color: AppColors.textMid)),
             ),
           )
         else
