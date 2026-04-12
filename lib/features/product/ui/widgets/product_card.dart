@@ -4,12 +4,7 @@ import 'package:new_auth/features/product/data/product_model.dart';
 import 'export_allthings.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({
-    super.key,
-    required this.product,
-    this.width,
-    this.onTap,
-  });
+  const ProductCard({super.key, required this.product, this.width, this.onTap});
 
   final ProductModel product;
   final double? width;
@@ -22,7 +17,8 @@ class ProductCard extends StatelessWidget {
     final hasDiscount =
         product.discountPrice != null && product.discountPrice! < product.price;
     final pct = hasDiscount
-        ? (((product.price - product.discountPrice!) / product.price) * 100).round()
+        ? (((product.price - product.discountPrice!) / product.price) * 100)
+              .round()
         : 0;
 
     return GestureDetector(
@@ -68,7 +64,10 @@ class ProductCard extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.badge,
                         borderRadius: BorderRadius.circular(6),
@@ -93,11 +92,17 @@ class ProductCard extends StatelessWidget {
                       color: AppColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppColors.black.withValues(alpha: 0.08), blurRadius: 4),
+                        BoxShadow(
+                          color: AppColors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
+                        ),
                       ],
                     ),
-                    child: const Icon(Icons.favorite_border_rounded,
-                        size: 14, color: AppColors.primary),
+                    child: const Icon(
+                      Icons.favorite_border_rounded,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
@@ -111,7 +116,7 @@ class ProductCard extends StatelessWidget {
                 children: [
                   Text(
                     product.title,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: r.captionFontSize + 1,
@@ -123,23 +128,28 @@ class ProductCard extends StatelessWidget {
                   SizedBox(height: r.isPhone ? 5 : 7),
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          color: AppColors.starYellow, size: 13),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: AppColors.starYellow,
+                        size: 13,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         product.rating.toStringAsFixed(1),
                         style: TextStyle(
-                            fontSize: r.captionFontSize,
-                            color: AppColors.textMid),
+                          fontSize: r.captionFontSize,
+                          color: AppColors.textMid,
+                        ),
                       ),
                       const Spacer(),
                       if (product.stock == 0)
                         Text(
                           context.l10n.outOfStockShort,
                           style: TextStyle(
-                              fontSize: r.captionFontSize - 1,
-                              color: AppColors.badge,
-                              fontWeight: FontWeight.w600),
+                            fontSize: r.captionFontSize - 1,
+                            color: AppColors.badge,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                     ],
                   ),
@@ -190,8 +200,11 @@ class _Placeholder extends StatelessWidget {
       width: double.infinity,
       height: height,
       color: AppColors.bgGrey,
-      child: const Icon(Icons.image_not_supported_outlined,
-          color: AppColors.priceOld, size: 32),
+      child: const Icon(
+        Icons.image_not_supported_outlined,
+        color: AppColors.priceOld,
+        size: 32,
+      ),
     );
   }
 }

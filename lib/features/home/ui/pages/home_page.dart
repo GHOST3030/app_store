@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:new_auth/features/categories/ui/pages/categories_page.dart';
+import 'package:new_auth/features/category/logic/providers/catgory_provider.dart';
+import 'package:new_auth/features/category/ui/pages/categories_page.dart';
 import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/features/home/ui/widgets/filter_and_sort_buttoms.dart';
 
@@ -118,7 +119,11 @@ class Homewidget extends StatelessWidget {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(productNotifierProvider.notifier).refresh(),
+      onRefresh: () {
+        ref.read(productNotifierProvider.notifier).refresh();
+        ref.read(categoryNotifierProvider.notifier).fetchCategories();
+        return Future.delayed(const Duration(seconds: 1));
+      },
       child: CustomScrollView(
         controller: _scroll,
         physics: const BouncingScrollPhysics(
@@ -148,20 +153,23 @@ class Homewidget extends StatelessWidget {
                 SizedBox(height: r.sectionGap),
 
                 // Promo carousel
-                //   const PromoBanner(),
+                const PromoBanner(),
                 SizedBox(height: r.sectionGap),
 
                 // Deal of the Day
                 const DealOfTheDaySection(),
 
-                // SizedBox(height: r.sectionGap),
+                SizedBox(height: r.sectionGap),
 
                 // // Special offers banner
-                // const SpecialOffersBanner(),
-                // SizedBox(height: r.isPhone ? 14 : 18),
+                const SpecialOffersBanner(),
+                SizedBox(height: r.isPhone ? 14 : 18),
 
                 // // Flat & Heels banner
-                // const FlatAndHeelsBanner(),
+                const FlatAndHeelsBanner(),
+
+                SizedBox(height: r.sectionGap),
+                TrendingProductsSection(),
               ],
             ),
           ),

@@ -19,67 +19,7 @@ class DealOfTheDaySection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Gradient header ─────────────────────────────────────────────────
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: r.hPad),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: r.isPhone ? 16 : 20,
-              vertical: r.isPhone ? 12 : 14,
-            ),
-            decoration: BoxDecoration(
-              gradient: AppColors.dealBannerGradient,
-              borderRadius: BorderRadius.circular(r.borderRadius),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.timer_outlined,
-                  color: AppColors.white,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.dealOfTheDay,
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: r.bodyFontSize,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      CountdownText(r: r),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Row(
-                    children: [
-                      Text(
-                        context.l10n.viewAll,
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: r.captionFontSize,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: AppColors.white,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
+        DealOfThDayWidget(r: r),
         SizedBox(height: r.isPhone ? 14 : 18),
 
         // ── Product list ────────────────────────────────────────────────────
@@ -121,22 +61,23 @@ class _ProductList extends ConsumerState<ProductlistView> {
             scrollController.position.maxScrollExtent - 200 &&
         !isloading &&
         hasmore) {
-          log("Scrolled near end, loading more products...");
+      log("Scrolled near end, loading more products...");
       notifier.loadMore();
     }
   }
+
   @override
   void dispose() {
     scrollController.dispose();
     super.dispose();
-  }             
+  }
 
   @override
   Widget build(BuildContext context) {
     final products = ref.watch(productListProvider);
     final isLoading = ref.watch(productIsLoadingProvider);
-   // log("Building ProductListView: ${products[0].images.first} products, isLoading: $isLoading");
-      if (isLoading) {
+    // log("Building ProductListView: ${products[0].images.first} products, isLoading: $isLoading");
+    if (isLoading) {
       return ListView.separated(
         controller: scrollController,
         scrollDirection: Axis.horizontal,
@@ -271,6 +212,70 @@ class _Line extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.divider,
         borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
+}
+
+class DealOfThDayWidget extends StatelessWidget {
+  const DealOfThDayWidget({super.key, required this.r});
+  final HomeResponsive r;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: r.hPad),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: r.isPhone ? 16 : 20,
+          vertical: r.isPhone ? 12 : 14,
+        ),
+        decoration: BoxDecoration(
+          gradient: AppColors.dealBannerGradient,
+          borderRadius: BorderRadius.circular(r.borderRadius),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.timer_outlined, color: AppColors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.dealOfTheDay,
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: r.bodyFontSize,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  CountdownText(r: r),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () {},
+              child: Row(
+                children: [
+                  Text(
+                    context.l10n.viewAll,
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: r.captionFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppColors.white,
+                    size: 14,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
