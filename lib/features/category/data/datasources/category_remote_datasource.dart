@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../logic/failures/failures.dart';

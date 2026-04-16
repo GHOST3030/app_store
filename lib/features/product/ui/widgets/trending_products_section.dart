@@ -4,6 +4,7 @@ import '../../data/product_model.dart';
 import '../../logic/product_providers.dart';
 import 'export_allthings.dart';
 import 'package:new_auth/core/extensions/l10n_extension.dart';
+import '../pages/view_all_products_page.dart';
 import 'product_card.dart';
 
 class TrendingProductsSection extends ConsumerWidget {
@@ -11,10 +12,8 @@ class TrendingProductsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final products = ref.watch(productListProvider);
+    final trendingProducts = ref.watch(trendingProductsProvider);
     final isLoading = ref.watch(productIsLoadingProvider);
-    final isLoadingMore = ref.watch(productIsLoadingMoreProvider);
-    final hasMore = ref.watch(productHasMoreProvider);
     final r = HomeResponsive.of(context);
 
     return Column(
@@ -63,7 +62,17 @@ class TrendingProductsSection extends ConsumerWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViewAllProductsPage(
+                          title: context.l10n.trendingProducts,
+                          provider: trendingProductsProvider,
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     children: [
                       Text(
@@ -90,22 +99,28 @@ class TrendingProductsSection extends ConsumerWidget {
 
         SizedBox(height: r.isPhone ? 14 : 18),
 
-        // ── Grid content ────────────────────────────────────────────────────
-        Buildcontent(ctx: context, ref: ref, products: products, isLoading: isLoading, isLoadingMore: isLoadingMore, hasMore: hasMore, r: r),
+        // ── List content ────────────────────────────────────────────────────
+        SizedBox(
+          height: r.dealListHeight,
+          child: _BuildHorizontalList(
+            ctx: context,
+            ref: ref,
+            products: trendingProducts,
+            isLoading: isLoading,
+            r: r,
+          ),
+        ),
       ],
     );
   }
 }
 
-class Buildcontent extends StatelessWidget {
-  const Buildcontent({
-    super.key,
+class _BuildHorizontalList extends StatelessWidget {
+  const _BuildHorizontalList({
     required this.ctx,
     required this.ref,
     required this.products,
     required this.isLoading,
-    required this.isLoadingMore,
-    required this.hasMore,
     required this.r,
   });
 
@@ -113,118 +128,52 @@ class Buildcontent extends StatelessWidget {
   final WidgetRef ref;
   final List<ProductModel> products;
   final bool isLoading;
-  final bool isLoadingMore;
-  final bool hasMore;
   final HomeResponsive r;
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return BuildShimmerGrid(r: r);
+      return BuildShimmerList(r: r);
     }
 
     if (products.isEmpty) {
-      return  SizedBox(
-        height: 80,
-        child: Center(
-          child: Text(
-            ctx.l10n.noProducts,
-            style: TextStyle(color: AppColors.textMid),
-          ),
+      return Center(
+        child: Text(
+          ctx.l10n.noProducts,
+          style: const TextStyle(color: AppColors.textMid),
         ),
       );
     }
 
-    final displayedProducts = products.take(r.productGridCols * 2).toList();
-    final cardWidth =
-        (MediaQuery.sizeOf(ctx).width - r.hPad * 2 - r.gridSpacing * (r.productGridCols - 1)) /
-            r.productGridCols;
-    final cardHeight = cardWidth / r.gridCardAspectRatio;
-
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: r.hPad),
-          child: Wrap(
-            spacing: r.gridSpacing,
-            runSpacing: r.gridSpacing,
-            children: [
-              for (final product in displayedProducts)
-                SizedBox(
-                  width: cardWidth,
-                  height: cardHeight,
-                  child: ProductCard(product: product),
-                ),
-            ],
-          ),
-        ),
-
-        if (hasMore) ...[
-          SizedBox(height: r.isPhone ? 16 : 20),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: r.hPad),
-            child: isLoadingMore
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () =>
-                          ref.read(productNotifierProvider.notifier).loadMore(),
-                      child: Text(
-                        ctx.l10n.loadMore,
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
-        ],
-      ],
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: r.hPad),
+      itemCount: products.length,
+      separatorBuilder: (_, __) => SizedBox(width: r.gridSpacing),
+      itemBuilder: (_, i) => ProductCard(product: products[i]),
     );
   }
 }
 
-class BuildShimmerGrid extends StatelessWidget {
-  const BuildShimmerGrid({
-    super.key,
-    required this.r,
-  });
-
+class BuildShimmerList extends StatelessWidget {
+  const BuildShimmerList({required this.r});
   final HomeResponsive r;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: r.hPad),
-      child: Wrap(
-        spacing: r.gridSpacing,
-        runSpacing: r.gridSpacing,
-        children: List.generate(
-          r.productGridCols * 2,
-          (_) => Container(
-            width: 100,
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.bgGrey,
-              borderRadius: BorderRadius.circular(r.borderRadius),
-            ),
-          ),
+      itemCount: 4,
+      separatorBuilder: (_, __) => SizedBox(width: r.gridSpacing),
+      itemBuilder: (_, __) => Container(
+        width: r.cardWidth,
+        decoration: BoxDecoration(
+          color: AppColors.bgGrey,
+          borderRadius: BorderRadius.circular(r.borderRadius),
         ),
       ),
     );
   }
 }
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:new_auth/features/home/ui/pages/home_page.dart';
+import 'package:new_auth/features/profile/ui/pages/profile_page.dart';
 import '../../features/auth/logic/providers_auth.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/signup_page.dart';
@@ -42,6 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return Text("lkj");
         },
       ),
+      GoRoute(path: '/profile', builder: (context, state) => ProfilePage()),
     ],
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
@@ -63,9 +65,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (state.uri.host == 'reset-callback' ||
           state.matchedLocation == '/reset-callback') {
         final error = state.uri.queryParameters['error'];
-      //  final errorDescription = state.uri.queryParameters['error_description'];
+        //  final errorDescription = state.uri.queryParameters['error_description'];
         if (error != null) {
-        //  print("Password reset callback error: $error - $errorDescription");
+          //  print("Password reset callback error: $error - $errorDescription");
           return '/login';
         }
         return '/update-password';

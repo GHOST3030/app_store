@@ -133,9 +133,18 @@ class ProductNotifier extends Notifier<ProductState> {
       final repo = ref.read(productRepositoryProvider);
       final page = await repo.getProducts(limit: _kPageSize, query: query);
 
+      final trending = page.where((p) => p.rating >= 4.5).toList();
+      final deals = page.where((p) => p.discountPrice != null && p.discountPrice! < p.price).toList();
+      final newArr = page.toList()..sort((a,b) => b.createdAt.compareTo(a.createdAt));
+      final specials = page.where((p) => p.stock < 50).toList();
+
       state = ProductState(
         status: ProductStatus.success,
         products: page,
+        trendingProducts: trending.isEmpty ? page.take(4).toList() : trending,
+        dealProducts: deals.isEmpty ? page.skip(4).take(4).toList() : deals,
+        specialOffers: specials.isEmpty ? page.reversed.take(4).toList() : specials,
+        newArrivals: newArr.take(6).toList(),
         query: query,
         hasMore: page.length >= _kPageSize,
         cursor: page.isNotEmpty ? page.last.id : null,

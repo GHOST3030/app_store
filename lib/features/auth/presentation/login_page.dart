@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:new_auth/core/responsive/responsive.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
 
@@ -30,13 +31,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
-
     errmessage = message;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen to AuthState updates (specifically errors)
     ref.listen<AsyncValue<AppUser?>>(authControllerProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
         final error = next.error;
@@ -51,196 +50,200 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
 
+    final content = _buildContent(context, isLoading);
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                context.l10n.welcomeBack,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.black,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Email Field
-              _AuthInputField(
-                controller: _emailController,
-                hintText: context.l10n.usernameOrEmail,
-                prefixIcon: Icons.person,
-                enabled: !isLoading,
-              ),
-              const SizedBox(height: 16),
-
-              // Password Field
-              _AuthInputField(
-                controller: _passwordController,
-                hintText: context.l10n.password,
-                prefixIcon: Icons.lock,
-                suffixIcon: Icons.visibility,
-                obscureText: true,
-                enabled: !isLoading,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => context.push('/forgot-password'),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    context.l10n.forgotPasswordAsk,
-                    style: const TextStyle(
-                      color: AppColors.authAccent,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Login Button
-              if (isLoading)
-                const Center(
-                  child: CircularProgressIndicator(color: AppColors.authAccent),
-                )
-              else
-                ElevatedButton(
-                  onPressed: () {
-                    final usernameOrEmail = _emailController.text.trim();
-                    final password = _passwordController.text.trim();
-                    if (usernameOrEmail.isNotEmpty && password.isNotEmpty) {
-                      final isEmail =
-                          usernameOrEmail.contains('@') &&
-                          usernameOrEmail.contains('.');
-                      final sanitizedUsername = usernameOrEmail
-                          .replaceAll(' ', '')
-                          .toLowerCase();
-                      final emailToUse = isEmail
-                          ? usernameOrEmail
-                          : '$sanitizedUsername@placeholder.app.com';
-                      ref
-                          .read(authControllerProvider.notifier)
-                          .login(emailToUse, password);
-                    } else {
-                      _showError(context.l10n.pleaseFillInAllFields);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.authButton,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    context.l10n.login,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                ),
-
-              const SizedBox(height: 48),
-
-              // Social Login OR Divider
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  context.l10n.orContinueWith,
-                  style: const TextStyle(
-                    color: AppColors.textMid,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Social Login Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _SocialLoginButton(
-                    icon:
-                        'assets/google.png',
-                    fallbackIcon: Icons.g_mobiledata,
-                    color: AppColors.error,
-                    onPressed: () {
-                      ref
-                          .read(authControllerProvider.notifier)
-                          .loginWithGoogle();
-                    },
-                  ),
-                  const SizedBox(width: 20),
-                  _SocialLoginButton(
-                    icon: 'assets/apple.png',
-                    fallbackIcon: Icons.apple,
-                    color: AppColors.black,
-                    onPressed: () {
-                      // Apple logic
-                    },
-                  ),
-                  const SizedBox(width: 20),
-                  _SocialLoginButton(
-                    icon: 'assets/facebook.png',
-                    fallbackIcon: Icons.facebook,
-                    color: Colors.blue,
-                    onPressed: () {
-                      // Facebook logic
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 48),
-
-              // Sign Up Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    context.l10n.createAnAccountText,
-                    style: const TextStyle(
-                      color: AppColors.textMid,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.go('/signup'),
-                    child: Text(
-                      context.l10n.signUp,
-                      style: const TextStyle(
-                        color: AppColors.authAccent,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppColors.authAccent,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        child: ResponsiveBuilder(
+          mobile: content,
+          tablet: Center(
+            child: SizedBox(
+              width: 500,
+              child: content,
+            ),
+          ),
+          desktop: Center(
+            child: SizedBox(
+              width: 600,
+              child: content,
+            ),
           ),
         ),
       ),
     );
   }
-}
 
-// ─── Reusable auth input field ─────────────────────────────────────────────────
+  Widget _buildContent(BuildContext context, bool isLoading) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.responsivePadding,
+        vertical: context.responsiveMargin,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: context.responsiveMargin),
+          Text(
+            context.l10n.welcomeBack,
+            style: context.responsiveStyle(
+              Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.black,
+                height: 1.2,
+              ),
+            ),
+          ),
+          SizedBox(height: context.responsiveMargin * 1.5),
+          _AuthInputField(
+            controller: _emailController,
+            hintText: context.l10n.usernameOrEmail,
+            prefixIcon: Icons.person,
+            enabled: !isLoading,
+          ),
+          SizedBox(height: context.responsivePadding),
+          _AuthInputField(
+            controller: _passwordController,
+            hintText: context.l10n.password,
+            prefixIcon: Icons.lock,
+            suffixIcon: Icons.visibility,
+            obscureText: true,
+            enabled: !isLoading,
+          ),
+          SizedBox(height: context.responsivePadding * 0.75),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.push('/forgot-password'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                context.l10n.forgotPasswordAsk,
+                style: const TextStyle(
+                  color: AppColors.authAccent,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: context.responsiveMargin),
+          if (isLoading)
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.authAccent),
+            )
+          else
+            ElevatedButton(
+              onPressed: () {
+                final usernameOrEmail = _emailController.text.trim();
+                final password = _passwordController.text.trim();
+                if (usernameOrEmail.isNotEmpty && password.isNotEmpty) {
+                  final isEmail =
+                      usernameOrEmail.contains('@') &&
+                      usernameOrEmail.contains('.');
+                  final sanitizedUsername = usernameOrEmail
+                      .replaceAll(' ', '')
+                      .toLowerCase();
+                  final emailToUse = isEmail
+                      ? usernameOrEmail
+                      : '$sanitizedUsername@placeholder.app.com';
+                  ref
+                      .read(authControllerProvider.notifier)
+                      .login(emailToUse, password);
+                } else {
+                  _showError(context.l10n.pleaseFillInAllFields);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.authButton,
+                foregroundColor: AppColors.white,
+                padding: EdgeInsets.symmetric(vertical: context.responsivePadding),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                context.l10n.login,
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(18),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          SizedBox(height: context.responsiveMargin * 1.5),
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              context.l10n.orContinueWith,
+              style: const TextStyle(
+                color: AppColors.textMid,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          SizedBox(height: context.responsiveMargin),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _SocialLoginButton(
+                icon: 'assets/google.png',
+                fallbackIcon: Icons.g_mobiledata,
+                color: AppColors.error,
+                onPressed: () {
+                  ref
+                      .read(authControllerProvider.notifier)
+                      .loginWithGoogle();
+                },
+              ),
+              SizedBox(width: context.responsivePadding),
+              _SocialLoginButton(
+                icon: 'assets/apple.png',
+                fallbackIcon: Icons.apple,
+                color: AppColors.black,
+                onPressed: () {},
+              ),
+              SizedBox(width: context.responsivePadding),
+              _SocialLoginButton(
+                icon: 'assets/facebook.png',
+                fallbackIcon: Icons.facebook,
+                color: Colors.blue,
+                onPressed: () {},
+              ),
+            ],
+          ),
+          SizedBox(height: context.responsiveMargin * 1.5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                context.l10n.createAnAccountText,
+                style: const TextStyle(
+                  color: AppColors.textMid,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.go('/signup'),
+                child: Text(
+                  context.l10n.signUp,
+                  style: const TextStyle(
+                    color: AppColors.authAccent,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.authAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _AuthInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -277,9 +280,9 @@ class _AuthInputField extends StatelessWidget {
           suffixIcon: suffixIcon != null
               ? Icon(suffixIcon, color: AppColors.textMid)
               : null,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: context.responsivePadding,
+            vertical: context.responsivePadding,
           ),
         ),
         obscureText: obscureText,
@@ -288,8 +291,6 @@ class _AuthInputField extends StatelessWidget {
     );
   }
 }
-
-// ─── Social login button ─────────────────────────────────────────────────────
 
 class _SocialLoginButton extends StatelessWidget {
   final String icon;
@@ -306,19 +307,22 @@ class _SocialLoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = context.isDesktop ? 80.0 : (context.isTablet ? 70.0 : 60.0);
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(size / 2),
       child: Container(
-        width: 60,
-        height: 60,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.authAccent.withValues(alpha: 0.5)),
+          border: Border.all(
+            color: AppColors.authAccent.withValues(alpha: 0.5),
+          ),
           color: AppColors.authAccent.withValues(alpha: 0.05),
         ),
         child: Center(
-          child: Icon(fallbackIcon, size: 32, color: color),
+          child: Icon(fallbackIcon, size: size * 0.5, color: color),
         ),
       ),
     );

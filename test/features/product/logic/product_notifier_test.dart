@@ -90,7 +90,7 @@ void main() {
       final data = await _waitForData(c);
 
       expect(data.products.length, 2);
-      expect(data.featuredProducts.length, 1);
+      expect(data.trendingProducts.length, 1);
       expect(data.failure, isNull);
       expect(data.cursor, isNotNull); // set from last product
     });

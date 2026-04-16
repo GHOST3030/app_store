@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:new_auth/core/extensions/l10n_extension.dart';
 import 'package:new_auth/core/localization/language_provider.dart';
 import '../../../product/ui/widgets/export_allthings.dart';
@@ -54,7 +55,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: GestureDetector(
-            onTap: () {},
+            onTap: () => context.go('/profile'),
             child: const CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.primaryLight,

@@ -18,7 +18,7 @@ class CategoryModel {
       id: json['id'].toString(),
       name: json['name'] ?? '',
       imageUrl: json['imageurl'] ?? '',
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: DateTime.parse(json['createdat'] as String),
     );
   }
 
@@ -27,7 +27,7 @@ class CategoryModel {
       'id': id,
       'name': name,
       'imageurl': imageUrl,
-      'createdAt': createdAt.toIso8601String(),
+      'createdat': createdAt.toIso8601String(),
     };
   }
 

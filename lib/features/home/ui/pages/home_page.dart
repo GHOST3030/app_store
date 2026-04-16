@@ -8,6 +8,7 @@ import 'package:new_auth/features/home/ui/widgets/filter_and_sort_buttoms.dart';
 import '../../../product/logic/product_providers.dart';
 import '../../../product/logic/product_state.dart';
 import '../../../product/ui/widgets/export_allthings.dart';
+import '../../../product/ui/widgets/special_offers_section.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -161,8 +162,8 @@ class Homewidget extends StatelessWidget {
 
                 SizedBox(height: r.sectionGap),
 
-                // // Special offers banner
-                const SpecialOffersBanner(),
+                // // Special offers section with list
+                const SpecialOffersSection(),
                 SizedBox(height: r.isPhone ? 14 : 18),
 
                 // // Flat & Heels banner
@@ -170,6 +171,9 @@ class Homewidget extends StatelessWidget {
 
                 SizedBox(height: r.sectionGap),
                 TrendingProductsSection(),
+
+                SizedBox(height: r.sectionGap),
+                NewArrivalsSection(),
               ],
             ),
           ),

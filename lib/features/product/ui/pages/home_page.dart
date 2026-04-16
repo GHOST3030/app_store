@@ -153,8 +153,8 @@
 
 //                 SizedBox(height: r.sectionGap),
 
-//                 // Special offers banner
-//                  const SpecialOffersBanner(),
+//                 // Special offers section
+//                  const SpecialOffersSection(),
 //                  SizedBox(height: r.isPhone ? 14 : 18),
 
 //                 // Flat & Heels banner

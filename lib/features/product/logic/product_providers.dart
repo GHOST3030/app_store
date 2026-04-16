@@ -25,11 +25,20 @@ final productListProvider = Provider<List<ProductModel>>((ref) {
       const [];
 });
 
-final featuredProductsProvider = Provider<List<ProductModel>>((ref) {
-  return ref.watch(
-        productNotifierProvider.select((v) => v.featuredProducts),
-      ) ??
-      const [];
+final trendingProductsProvider = Provider<List<ProductModel>>((ref) {
+  return ref.watch(productNotifierProvider.select((v) => v.trendingProducts));
+});
+
+final dealProductsProvider = Provider<List<ProductModel>>((ref) {
+  return ref.watch(productNotifierProvider.select((v) => v.dealProducts));
+});
+
+final specialOffersProvider = Provider<List<ProductModel>>((ref) {
+  return ref.watch(productNotifierProvider.select((v) => v.specialOffers));
+});
+
+final newArrivalsProvider = Provider<List<ProductModel>>((ref) {
+  return ref.watch(productNotifierProvider.select((v) => v.newArrivals));
 });
 
 /// FIX: uses .select() for granular rebuilds.

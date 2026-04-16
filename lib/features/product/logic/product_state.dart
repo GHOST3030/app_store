@@ -26,7 +26,10 @@ enum ProductStatus { idle, loading, loadingMore, success, failure }
 class ProductState {
   final ProductStatus status;
   final List<ProductModel> products;
-  final List<ProductModel> featuredProducts;
+  final List<ProductModel> trendingProducts;
+  final List<ProductModel> dealProducts;
+  final List<ProductModel> specialOffers;
+  final List<ProductModel> newArrivals;
   final ProductQuery query;
   final bool hasMore;
   final String? cursor;
@@ -35,17 +38,23 @@ class ProductState {
   const ProductState({
     this.status = ProductStatus.idle,
     this.products = const [],
+    this.trendingProducts = const [],
+    this.dealProducts = const [],
+    this.specialOffers = const [],
+    this.newArrivals = const [],
     this.query = const ProductQuery(),
     this.hasMore = true,
     this.cursor,
     this.failure, 
-     this.featuredProducts=const [],
   });
 
   ProductState copyWith({
     ProductStatus? status,
     List<ProductModel>? products,
-    List<ProductModel>? featuredProducts,
+    List<ProductModel>? trendingProducts,
+    List<ProductModel>? dealProducts,
+    List<ProductModel>? specialOffers,
+    List<ProductModel>? newArrivals,
     ProductQuery? query,
     bool? hasMore,
     String? cursor,
@@ -56,12 +65,14 @@ class ProductState {
     return ProductState(
       status: status ?? this.status,
       products: products ?? this.products,
-      featuredProducts:featuredProducts ?? this.featuredProducts,
+      trendingProducts: trendingProducts ?? this.trendingProducts,
+      dealProducts: dealProducts ?? this.dealProducts,
+      specialOffers: specialOffers ?? this.specialOffers,
+      newArrivals: newArrivals ?? this.newArrivals,
       query: query ?? this.query,
       hasMore: hasMore ?? this.hasMore,
       cursor: clearCursor ? null : (cursor ?? this.cursor),
       failure: clearFailure ? null : (failure ?? this.failure),
-    
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:new_auth/core/extensions/l10n_extension.dart';
 import '../../logic/deal_timer_notifier.dart';
 import '../../logic/product_providers.dart';
+import '../pages/view_all_products_page.dart';
 import 'export_allthings.dart';
 import 'product_card.dart';
 
@@ -254,7 +255,17 @@ class DealOfThDayWidget extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ViewAllProductsPage(
+                      title: context.l10n.dealOfTheDay,
+                      provider: dealProductsProvider,
+                    ),
+                  ),
+                );
+              },
               child: Row(
                 children: [
                   Text(
