@@ -10,6 +10,8 @@ import 'core/theme/theme_provider.dart';
 import 'core/localization/language_provider.dart';
 
 void main() async {
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   // Ensure Flutter bindings are initialized before calling async methods
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
