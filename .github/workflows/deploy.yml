@@ -11,45 +11,88 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ─── 1. Checkout ───────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ─── 2. Setup Flutter ──────────────────────────────────
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.4'
-          cache: true
+          flutter-version: '3.38.4'   # ← غيّر لنسختك
+          cache: true                  # cache للـ pub packages
 
+      # ─── 3. Install Dependencies ───────────────────────────
       - name: Install dependencies
         run: flutter pub get
 
+      # ─── 4. Analyze (Lint) ─────────────────────────────────
+      # - name: Analyze code
+      #   run: flutter analyze --no-fatal-infos
+
+      # ─── 5. Run Tests ──────────────────────────────────────
+      # - name: Run tests
+      #   run: flutter test --coverage
+
+      # ─── 6. Build Web ──────────────────────────────────────
       - name: Build Web
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          flutter build web --release \
+            flutter build web --release \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
+      # ─── 7. Deploy to Vercel (Production on main) ──────────
+# ─── 7. Deploy to Vercel (Production on main) ──────────
       - name: Deploy to Vercel (Production)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           npm install -g vercel
+          mkdir -p build/web/.vercel
+          echo '{
+            "orgId":"${{ secrets.VERCEL_ORG_ID }}",
+            "projectId":"${{ secrets.VERCEL_PROJECT_ID }}"
+          }' > build/web/.vercel/project.json
           vercel deploy build/web \
             --prod \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --yes
 
+      # ─── 8. Preview Deploy (on PR) ─────────────────────────
       - name: Deploy Preview (PR)
         if: github.event_name == 'pull_request'
         run: |
           npm install -g vercel
+          mkdir -p build/web/.vercel
+          echo '{
+            "orgId":"${{ secrets.VERCEL_ORG_ID }}",
+            "projectId":"${{ secrets.VERCEL_PROJECT_ID }}"
+          }' > build/web/.vercel/project.json
           PREVIEW_URL=$(vercel deploy build/web \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --yes)
           echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # ─── 8. Preview Deploy (on PR) ─────────────────────────
+      - name: Deploy Preview (PR)
+        if: github.event_name == 'pull_request'
+        working-directory: build/web
+        run: |
+          npm install -g vercel
+          PREVIEW_URL=$(vercel deploy \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes)
+          echo "Preview URL: $PREVIEW_URL"
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+      # ─── 9. Comment Preview URL on PR ──────────────────────
       - name: Comment Preview URL on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -59,5 +102,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Preview deployed:\n${process.env.PREVIEW_URL}`
+              body: `🚀 **Preview deployed!**\n\n🔗 ${process.env.PREVIEW_URL}`
             })
