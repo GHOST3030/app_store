@@ -6,6 +6,7 @@ import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/core/responsive/responsive.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
+import 'package:new_auth/core/widgets/shared_text_field.dart';
 
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
@@ -18,6 +19,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -50,31 +53,77 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
 
-    final content = _buildContent(context, isLoading);
+    final formContent = _buildFormContent(context, isLoading);
 
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: ResponsiveBuilder(
-          mobile: content,
-          tablet: Center(
-            child: SizedBox(
-              width: 500,
-              child: content,
-            ),
-          ),
-          desktop: Center(
-            child: SizedBox(
-              width: 600,
-              child: content,
-            ),
-          ),
+          mobile: _buildMobile(context, formContent),
+          tablet: _buildTablet(context, formContent),
+          desktop: _buildDesktop(context, formContent),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isLoading) {
+  Widget _buildMobile(BuildContext context, Widget formContent) {
+    return formContent;
+  }
+
+  Widget _buildTablet(BuildContext context, Widget formContent) {
+    return Center(
+      child: Card(
+        elevation: 8,
+        color: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        margin: EdgeInsets.all(context.responsivePadding * 2),
+        child: Container(
+          width: 500,
+          padding: EdgeInsets.all(context.responsivePadding * 1.5),
+          child: formContent,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktop(BuildContext context, Widget formContent) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            color: AppColors.authAccent.withValues(alpha: 0.05),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_add_alt_1, size: 120, color: AppColors.authAccent),
+                SizedBox(height: context.responsiveMargin),
+                Text(
+                  context.l10n.createAnAccount,
+                  style: context.responsiveStyle(
+                    Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: SizedBox(
+              width: 500,
+              child: formContent,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent(BuildContext context, bool isLoading) {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: context.responsivePadding * 1.5,
@@ -82,42 +131,55 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: context.responsiveMargin),
-          Text(
-            context.l10n.createAnAccount,
-            style: context.responsiveStyle(
-              Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
-                    height: 1.2,
-                  ),
+          if (!context.isDesktop) ...[
+            SizedBox(height: context.responsiveMargin),
+            Text(
+              context.l10n.createAnAccount,
+              style: context.responsiveStyle(
+                Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.black,
+                      height: 1.2,
+                    ),
+              ),
             ),
-          ),
-          SizedBox(height: context.responsiveMargin * 1.5),
-          _SignupInputField(
+            SizedBox(height: context.responsiveMargin * 1.5),
+          ],
+          SharedTextField(
             controller: _emailController,
             hintText: context.l10n.usernameOrEmail,
             prefixIcon: Icons.person,
             enabled: !isLoading,
           ),
           SizedBox(height: context.responsivePadding),
-          _SignupInputField(
+          SharedTextField(
             controller: _passwordController,
             hintText: context.l10n.password,
             prefixIcon: Icons.lock,
-            suffixIcon: Icons.visibility,
-            obscureText: true,
+            suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            obscureText: _obscurePassword,
             enabled: !isLoading,
+            onSuffixIconTap: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           SizedBox(height: context.responsivePadding),
-          _SignupInputField(
+          SharedTextField(
             controller: _confirmPasswordController,
             hintText: context.l10n.confirmPassword,
             prefixIcon: Icons.lock,
-            suffixIcon: Icons.visibility,
-            obscureText: true,
+            suffixIcon: _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+            obscureText: _obscureConfirmPassword,
             enabled: !isLoading,
+            onSuffixIconTap: () {
+              setState(() {
+                _obscureConfirmPassword = !_obscureConfirmPassword;
+              });
+            },
           ),
           SizedBox(height: context.responsiveMargin),
           RichText(
@@ -253,53 +315,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SignupInputField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final IconData prefixIcon;
-  final IconData? suffixIcon;
-  final bool obscureText;
-  final bool enabled;
-
-  const _SignupInputField({
-    required this.controller,
-    required this.hintText,
-    required this.prefixIcon,
-    this.suffixIcon,
-    this.obscureText = false,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.inputFill,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.textLight),
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(color: AppColors.textMid),
-          border: InputBorder.none,
-          prefixIcon: Icon(prefixIcon, color: AppColors.textMid),
-          suffixIcon: suffixIcon != null
-              ? Icon(suffixIcon, color: AppColors.textMid)
-              : null,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: context.responsivePadding,
-            vertical: context.responsivePadding,
-          ),
-        ),
-        obscureText: obscureText,
-        enabled: enabled,
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:new_auth/core/theme/app_colors.dart';
 import 'package:new_auth/core/responsive/responsive.dart';
 import '../domain/entities/app_user.dart';
 import '../logic/providers_auth.dart';
+import 'package:new_auth/core/widgets/shared_text_field.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -42,31 +43,82 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
 
-    final content = _buildContent(context, isLoading);
+    final formContent = _buildFormContent(context, isLoading);
 
     return Scaffold(
       backgroundColor: AppColors.white,
+      appBar: AppBar(
+        title: Text(context.l10n.forgetPassword),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: ResponsiveBuilder(
-          mobile: content,
-          tablet: Center(
-            child: SizedBox(
-              width: 500,
-              child: content,
-            ),
-          ),
-          desktop: Center(
-            child: SizedBox(
-              width: 600,
-              child: content,
-            ),
-          ),
+          mobile: _buildMobile(context, formContent),
+          tablet: _buildTablet(context, formContent),
+          desktop: _buildDesktop(context, formContent),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isLoading) {
+  Widget _buildMobile(BuildContext context, Widget formContent) {
+    return formContent;
+  }
+
+  Widget _buildTablet(BuildContext context, Widget formContent) {
+    return Center(
+      child: Card(
+        elevation: 8,
+        color: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        margin: EdgeInsets.all(context.responsivePadding * 2),
+        child: Container(
+          width: 500,
+          padding: EdgeInsets.all(context.responsivePadding * 1.5),
+          child: formContent,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktop(BuildContext context, Widget formContent) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            color: AppColors.authAccent.withValues(alpha: 0.05),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.mark_email_read, size: 120, color: AppColors.authAccent),
+                SizedBox(height: context.responsiveMargin),
+                Text(
+                  context.l10n.forgetPassword,
+                  style: context.responsiveStyle(
+                    Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: SizedBox(
+              width: 500,
+              child: formContent,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent(BuildContext context, bool isLoading) {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: context.responsivePadding * 1.5,
@@ -74,43 +126,28 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: context.responsiveMargin),
-          Text(
-            context.l10n.forgetPassword,
-            style: context.responsiveStyle(
-              const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: AppColors.black,
-                height: 1.1,
-              ),
-            ),
-          ),
-          SizedBox(height: context.responsiveMargin),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.inputFill,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.textLight),
-            ),
-            child: TextField(
-              controller: _emailController,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                hintText: context.l10n.enterYourEmailAddress,
-                hintStyle: const TextStyle(color: AppColors.textMid),
-                prefixIcon: const Icon(
-                  Icons.email_outlined,
-                  color: AppColors.textDark,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: context.responsivePadding,
-                  vertical: context.responsivePadding,
+          if (!context.isDesktop) ...[
+            SizedBox(height: context.responsiveMargin),
+            Text(
+              context.l10n.forgetPassword,
+              style: context.responsiveStyle(
+                const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.black,
+                  height: 1.1,
                 ),
               ),
             ),
+            SizedBox(height: context.responsiveMargin),
+          ],
+          SharedTextField(
+            controller: _emailController,
+            enabled: !isLoading,
+            hintText: context.l10n.enterYourEmailAddress,
+            prefixIcon: Icons.email_outlined,
           ),
           SizedBox(height: context.responsivePadding),
           RichText(
